@@ -11,7 +11,7 @@ def sync(save_dirs):
 
     wandb_dirs = []
     for d in dirs:
-        wandb_dirs.extend(glob.glob(f"{d}/wandb/offline-run-*"))
+        wandb_dirs.extend(glob.glob(f"{d}/wandb/offline-run-*", recursive=True))
 
     if wandb_dirs:
         cmd = ["wandb", "sync", *wandb_dirs]
@@ -23,6 +23,8 @@ def sync(save_dirs):
         ) as proc:
             for line in proc.stdout:
                 print(line, end="")
+    else:
+        print("No data found to sync")
 
     return time.time() - start
 
@@ -50,6 +52,6 @@ def sync_daemon(save_dirs, interval_sec=30):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--save_dirs', type=str, default='./exp/**')
-    parser.add_argument('--interval', type=int, default=60)
+    parser.add_argument('--interval', type=int, default=15)
     args = parser.parse_args()
     sync_daemon(args.save_dirs, args.interval)
