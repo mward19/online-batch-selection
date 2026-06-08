@@ -6,6 +6,8 @@ from tqdm import tqdm
 import subprocess
 import re
 
+WANDB_PROJECT = "Matthew—Deep Linear Networks"
+
 SEEDS = [1, 2, 3]
 DIAGNOSTICS = "configs/diagnostics/snapshots_log_interval.yaml"
 CONFIG_DIR = "configs/cifar3"
@@ -54,16 +56,11 @@ with open(save_dirs_file, "w") as f:
             [
                 "python",
                 "get_save_dir.py",
-                "--method",
-                method,
-                "--data",
-                data,
-                "--model",
-                model,
-                "--optim",
-                optim,
-                "--seed",
-                str(seed),
+                "--method", method,
+                "--data", data,
+                "--model", model,
+                "--optim", optim,
+                "--seed", str(seed),
             ],
             text=True,
         ).strip()
@@ -95,7 +92,8 @@ with open(save_dirs_file, "w") as f:
                 --diagnostics "{DIAGNOSTICS}" \\
                 --seed "{seed}" \\
                 --save_dir "{save_dir}" \\
-                --wandb_not_upload
+                --wandb_not_upload \\
+                --wandb_project "{WANDB_PROJECT}"
             """
         )
 

@@ -26,6 +26,8 @@ def build_artifact_stem(args, config):
             ratio=config.get('method_opt', {}).get('ratio'),
             lr=config['training_opt']['optim_params']['lr'],
             wd=config['training_opt']['optim_params']['weight_decay'],
+            layers=config['networks']['params']['num_hidden_layers'],
+            hidden_dim=config['networks']['params']['hidden_dim']
         )
     ).replace(' ', '')
 
@@ -163,6 +165,8 @@ def main():
                         help='Notes for the experiment.')
     parser.add_argument('--wandb_not_upload', action='store_true', 
                         help='Do not upload the result to wandb.')
+    parser.add_argument('--wandb_project', type=str, 
+                        default=None, help='Project name for W&B')
 
     args = parser.parse_args()
 
@@ -230,7 +234,7 @@ def main():
     logger.info(f'=====> Wandb initialized')
     wandb_init_kwargs = {
         'config': config,
-        'project': "Thesis Runs",
+        'project': args.wandb_project,
         'dir': save_dir,
     }
     if resume_state is not None:
