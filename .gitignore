@@ -10,6 +10,7 @@ __pycache__/
 _CIFAR/
 _MNIST/
 _TINYIMAGENET/
+logs/
 
 # _TINYIMAGENET/
 _CIFAR_N/
@@ -35,3 +36,6 @@ scripts/
 labels/
 snapshots/
 spectral_decay/
+
+# AI
+CLAUDE.md

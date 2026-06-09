@@ -1,0 +1,1355 @@
+save_dir: ./exp/MNIST/Uniform_deeplinear_bs320_ep300_lr0.001_AdamW_constant_seed3_r0.1_3_hidden
+=====> Loading config files: 
+configs/mnist/method/uniform-0.1.yaml
+configs/mnist/data/mnist.yaml
+configs/mnist/model/deep_linear_saxe/deep_linear_3.yaml
+configs/mnist/optim/adamw-320-0.001-0.01.yaml
+configs/diagnostics/snapshots_log_interval.yaml
+=====> Config files loaded.
+========================= Start Main =========================
+=====> Saving config file
+=====> Config file saved
+=====> Using fixed random seed: 3
+=====> Wandb initialized
+=====> Number of GPUs: 1
+Creating Uniform...
+Begin training for Uniform...
+=====> Epoch: 0/300, Total_step: 0, lr: 0.001000, Total Time: 0.0000 s, Time this epoch: 0.0000 s
+=====> Epoch: 0/300, Train Loss (train loader labels): 2.3035, Train acc (train loader labels): 0.1236, Best val acc: 0.1051, Current val acc: 0.1051, Val Loss: 2.2968
+selecting samples for epoch 1
+balance: False
+ratio: 0.1
+=====> Epoch: 1/300, Total_step: 1, lr: 0.001000, Total Time: 0.0000 s, Time this epoch: 0.0000 s
+=====> Epoch: 1/300, Train Loss (train loader labels): 2.9103, Train acc (train loader labels): 0.2037, Best val acc: 0.1856, Current val acc: 0.1856, Val Loss: 3.0551
+=====> Epoch: 1/300, Total_step: 48, lr: 0.001000, Total Time: 0.0000 s, Time this epoch: 0.0000 s
+=====> Epoch: 1/300, Train Loss (train loader labels): 1.9214, Train acc (train loader labels): 0.3635, Best val acc: 0.3717, Current val acc: 0.3717, Val Loss: 1.7056
+=====> Epoch: 1/300, Total_step: 95, lr: 0.001000, Total Time: 0.0000 s, Time this epoch: 0.0000 s
+=====> Epoch: 1/300, Train Loss (train loader labels): 1.9247, Train acc (train loader labels): 0.3565, Best val acc: 0.4809, Current val acc: 0.4809, Val Loss: 1.4714
+=====> Epoch: 1/300, Total_step: 142, lr: 0.001000, Total Time: 0.0000 s, Time this epoch: 0.0000 s
+=====> Epoch: 1/300, Train Loss (train loader labels): 1.7806, Train acc (train loader labels): 0.4216, Best val acc: 0.5299, Current val acc: 0.5299, Val Loss: 1.3479
+=====> Saving current model and best model
+selecting samples for epoch 2
+balance: False
+ratio: 0.1
+=====> Epoch: 2/300, Total_step: 189, lr: 0.001000, Total Time: 324.8928 s, Time this epoch: 269.8737 s
+=====> Epoch: 2/300, Train Loss (train loader labels): 1.7463, Train acc (train loader labels): 0.4039, Best val acc: 0.5299, Current val acc: 0.5088, Val Loss: 1.3960
+=====> Epoch: 2/300, Total_step: 236, lr: 0.001000, Total Time: 324.8928 s, Time this epoch: 269.8737 s
+=====> Epoch: 2/300, Train Loss (train loader labels): 1.7923, Train acc (train loader labels): 0.4122, Best val acc: 0.5299, Current val acc: 0.5013, Val Loss: 1.4456
+=====> Epoch: 2/300, Total_step: 283, lr: 0.001000, Total Time: 324.8928 s, Time this epoch: 269.8737 s
+=====> Epoch: 2/300, Train Loss (train loader labels): 1.7279, Train acc (train loader labels): 0.4299, Best val acc: 0.5793, Current val acc: 0.5793, Val Loss: 1.2618
+=====> Epoch: 2/300, Total_step: 330, lr: 0.001000, Total Time: 324.8928 s, Time this epoch: 269.8737 s
+=====> Epoch: 2/300, Train Loss (train loader labels): 1.8463, Train acc (train loader labels): 0.3929, Best val acc: 0.5793, Current val acc: 0.4954, Val Loss: 1.3219
+=====> Saving current model and best model
+selecting samples for epoch 3
+balance: False
+ratio: 0.1
+=====> Epoch: 3/300, Total_step: 377, lr: 0.001000, Total Time: 594.9140 s, Time this epoch: 269.7646 s
+=====> Epoch: 3/300, Train Loss (train loader labels): 1.7465, Train acc (train loader labels): 0.4396, Best val acc: 0.5793, Current val acc: 0.5386, Val Loss: 1.3838
+=====> Epoch: 3/300, Total_step: 424, lr: 0.001000, Total Time: 594.9140 s, Time this epoch: 269.7646 s
+=====> Epoch: 3/300, Train Loss (train loader labels): 1.7109, Train acc (train loader labels): 0.4243, Best val acc: 0.5793, Current val acc: 0.5125, Val Loss: 1.4174
+=====> Epoch: 3/300, Total_step: 471, lr: 0.001000, Total Time: 594.9140 s, Time this epoch: 269.7646 s
+=====> Epoch: 3/300, Train Loss (train loader labels): 1.7027, Train acc (train loader labels): 0.4331, Best val acc: 0.5916, Current val acc: 0.5916, Val Loss: 1.2342
+=====> Epoch: 3/300, Total_step: 518, lr: 0.001000, Total Time: 594.9140 s, Time this epoch: 269.7646 s
+=====> Epoch: 3/300, Train Loss (train loader labels): 1.7416, Train acc (train loader labels): 0.4079, Best val acc: 0.5916, Current val acc: 0.5207, Val Loss: 1.4548
+=====> Saving current model and best model
+selecting samples for epoch 4
+balance: False
+ratio: 0.1
+=====> Epoch: 4/300, Total_step: 565, lr: 0.001000, Total Time: 863.8477 s, Time this epoch: 268.7440 s
+=====> Epoch: 4/300, Train Loss (train loader labels): 1.7621, Train acc (train loader labels): 0.4054, Best val acc: 0.5916, Current val acc: 0.5541, Val Loss: 1.2507
+=====> Epoch: 4/300, Total_step: 612, lr: 0.001000, Total Time: 863.8477 s, Time this epoch: 268.7440 s
+=====> Epoch: 4/300, Train Loss (train loader labels): 1.7482, Train acc (train loader labels): 0.4087, Best val acc: 0.5916, Current val acc: 0.5804, Val Loss: 1.3037
+=====> Epoch: 4/300, Total_step: 659, lr: 0.001000, Total Time: 863.8477 s, Time this epoch: 268.7440 s
+=====> Epoch: 4/300, Train Loss (train loader labels): 1.7586, Train acc (train loader labels): 0.4003, Best val acc: 0.5916, Current val acc: 0.5305, Val Loss: 1.3516
+=====> Epoch: 4/300, Total_step: 706, lr: 0.001000, Total Time: 863.8477 s, Time this epoch: 268.7440 s
+=====> Epoch: 4/300, Train Loss (train loader labels): 1.7401, Train acc (train loader labels): 0.4307, Best val acc: 0.5916, Current val acc: 0.5506, Val Loss: 1.3071
+=====> Saving current model and best model
+selecting samples for epoch 5
+balance: False
+ratio: 0.1
+=====> Epoch: 5/300, Total_step: 753, lr: 0.001000, Total Time: 1133.4220 s, Time this epoch: 269.3200 s
+=====> Epoch: 5/300, Train Loss (train loader labels): 1.7529, Train acc (train loader labels): 0.4225, Best val acc: 0.5916, Current val acc: 0.5603, Val Loss: 1.3130
+=====> Epoch: 5/300, Total_step: 800, lr: 0.001000, Total Time: 1133.4220 s, Time this epoch: 269.3200 s
+=====> Epoch: 5/300, Train Loss (train loader labels): 1.7341, Train acc (train loader labels): 0.4360, Best val acc: 0.6012, Current val acc: 0.6012, Val Loss: 1.2446
+=====> Epoch: 5/300, Total_step: 847, lr: 0.001000, Total Time: 1133.4220 s, Time this epoch: 269.3200 s
+=====> Epoch: 5/300, Train Loss (train loader labels): 1.6652, Train acc (train loader labels): 0.4580, Best val acc: 0.6157, Current val acc: 0.6157, Val Loss: 1.2300
+=====> Epoch: 5/300, Total_step: 894, lr: 0.001000, Total Time: 1133.4220 s, Time this epoch: 269.3200 s
+=====> Epoch: 5/300, Train Loss (train loader labels): 1.7144, Train acc (train loader labels): 0.4305, Best val acc: 0.6157, Current val acc: 0.5277, Val Loss: 1.3258
+=====> Saving current model and best model
+selecting samples for epoch 6
+balance: False
+ratio: 0.1
+=====> Epoch: 6/300, Total_step: 1128, lr: 0.001000, Total Time: 1403.8581 s, Time this epoch: 270.2251 s
+=====> Epoch: 6/300, Train Loss (train loader labels): 1.6706, Train acc (train loader labels): 0.4531, Best val acc: 0.6157, Current val acc: 0.5919, Val Loss: 1.2836
+=====> Saving current model and best model
+selecting samples for epoch 7
+balance: False
+ratio: 0.1
+=====> Epoch: 7/300, Total_step: 1316, lr: 0.001000, Total Time: 1509.8165 s, Time this epoch: 105.7547 s
+=====> Epoch: 7/300, Train Loss (train loader labels): 1.7365, Train acc (train loader labels): 0.4269, Best val acc: 0.6157, Current val acc: 0.5510, Val Loss: 1.2754
+=====> Saving current model and best model
+selecting samples for epoch 8
+balance: False
+ratio: 0.1
+=====> Epoch: 8/300, Total_step: 1504, lr: 0.001000, Total Time: 1615.4647 s, Time this epoch: 105.5030 s
+=====> Epoch: 8/300, Train Loss (train loader labels): 1.6446, Train acc (train loader labels): 0.4620, Best val acc: 0.6631, Current val acc: 0.6631, Val Loss: 1.1331
+=====> Saving current model and best model
+selecting samples for epoch 9
+balance: False
+ratio: 0.1
+=====> Epoch: 9/300, Total_step: 1692, lr: 0.001000, Total Time: 1721.3161 s, Time this epoch: 105.6935 s
+=====> Epoch: 9/300, Train Loss (train loader labels): 1.6359, Train acc (train loader labels): 0.4693, Best val acc: 0.6631, Current val acc: 0.6114, Val Loss: 1.2212
+=====> Saving current model and best model
+selecting samples for epoch 10
+balance: False
+ratio: 0.1
+=====> Epoch: 10/300, Total_step: 1880, lr: 0.001000, Total Time: 1827.2472 s, Time this epoch: 105.6579 s
+=====> Epoch: 10/300, Train Loss (train loader labels): 1.6428, Train acc (train loader labels): 0.4600, Best val acc: 0.6631, Current val acc: 0.5403, Val Loss: 1.3554
+=====> Saving current model and best model
+selecting samples for epoch 11
+balance: False
+ratio: 0.1
+=====> Epoch: 11/300, Total_step: 2068, lr: 0.001000, Total Time: 1932.5876 s, Time this epoch: 105.1756 s
+=====> Epoch: 11/300, Train Loss (train loader labels): 1.8144, Train acc (train loader labels): 0.4242, Best val acc: 0.6631, Current val acc: 0.5501, Val Loss: 1.3084
+=====> Saving current model and best model
+selecting samples for epoch 12
+balance: False
+ratio: 0.1
+=====> Epoch: 12/300, Total_step: 2256, lr: 0.001000, Total Time: 2037.8014 s, Time this epoch: 105.0426 s
+=====> Epoch: 12/300, Train Loss (train loader labels): 1.6315, Train acc (train loader labels): 0.4693, Best val acc: 0.6631, Current val acc: 0.5971, Val Loss: 1.2398
+=====> Saving current model and best model
+selecting samples for epoch 13
+balance: False
+ratio: 0.1
+=====> Epoch: 13/300, Total_step: 2444, lr: 0.001000, Total Time: 2143.3150 s, Time this epoch: 105.3573 s
+=====> Epoch: 13/300, Train Loss (train loader labels): 1.6444, Train acc (train loader labels): 0.4805, Best val acc: 0.6631, Current val acc: 0.6083, Val Loss: 1.2094
+=====> Saving current model and best model
+selecting samples for epoch 14
+balance: False
+ratio: 0.1
+=====> Epoch: 14/300, Total_step: 2632, lr: 0.001000, Total Time: 2248.6187 s, Time this epoch: 105.1179 s
+=====> Epoch: 14/300, Train Loss (train loader labels): 1.6356, Train acc (train loader labels): 0.4709, Best val acc: 0.6631, Current val acc: 0.5879, Val Loss: 1.2101
+=====> Saving current model and best model
+selecting samples for epoch 15
+balance: False
+ratio: 0.1
+=====> Epoch: 15/300, Total_step: 2820, lr: 0.001000, Total Time: 2354.0073 s, Time this epoch: 105.2319 s
+=====> Epoch: 15/300, Train Loss (train loader labels): 1.6492, Train acc (train loader labels): 0.4687, Best val acc: 0.6631, Current val acc: 0.6497, Val Loss: 1.1622
+=====> Saving current model and best model
+selecting samples for epoch 16
+balance: False
+ratio: 0.1
+=====> Epoch: 16/300, Total_step: 3008, lr: 0.001000, Total Time: 2459.3558 s, Time this epoch: 105.2064 s
+=====> Epoch: 16/300, Train Loss (train loader labels): 1.6009, Train acc (train loader labels): 0.4732, Best val acc: 0.6631, Current val acc: 0.5373, Val Loss: 1.3325
+=====> Saving current model and best model
+selecting samples for epoch 17
+balance: False
+ratio: 0.1
+=====> Epoch: 17/300, Total_step: 3196, lr: 0.001000, Total Time: 2564.7649 s, Time this epoch: 105.2623 s
+=====> Epoch: 17/300, Train Loss (train loader labels): 1.6240, Train acc (train loader labels): 0.4661, Best val acc: 0.6631, Current val acc: 0.5861, Val Loss: 1.1909
+=====> Saving current model and best model
+selecting samples for epoch 18
+balance: False
+ratio: 0.1
+=====> Epoch: 18/300, Total_step: 3384, lr: 0.001000, Total Time: 2670.5509 s, Time this epoch: 105.6223 s
+=====> Epoch: 18/300, Train Loss (train loader labels): 1.6213, Train acc (train loader labels): 0.4679, Best val acc: 0.6631, Current val acc: 0.5760, Val Loss: 1.2885
+=====> Saving current model and best model
+selecting samples for epoch 19
+balance: False
+ratio: 0.1
+=====> Epoch: 19/300, Total_step: 3572, lr: 0.001000, Total Time: 2775.7463 s, Time this epoch: 105.0590 s
+=====> Epoch: 19/300, Train Loss (train loader labels): 1.6752, Train acc (train loader labels): 0.4615, Best val acc: 0.6631, Current val acc: 0.5988, Val Loss: 1.1716
+=====> Saving current model and best model
+selecting samples for epoch 20
+balance: False
+ratio: 0.1
+=====> Epoch: 20/300, Total_step: 3760, lr: 0.001000, Total Time: 2881.4778 s, Time this epoch: 105.5913 s
+=====> Epoch: 20/300, Train Loss (train loader labels): 1.7125, Train acc (train loader labels): 0.4428, Best val acc: 0.6631, Current val acc: 0.5936, Val Loss: 1.2724
+=====> Saving current model and best model
+selecting samples for epoch 21
+balance: False
+ratio: 0.1
+=====> Epoch: 21/300, Total_step: 3948, lr: 0.001000, Total Time: 2986.9741 s, Time this epoch: 105.3544 s
+=====> Epoch: 21/300, Train Loss (train loader labels): 1.6418, Train acc (train loader labels): 0.4759, Best val acc: 0.6631, Current val acc: 0.6506, Val Loss: 1.1305
+=====> Saving current model and best model
+selecting samples for epoch 22
+balance: False
+ratio: 0.1
+=====> Epoch: 22/300, Total_step: 4136, lr: 0.001000, Total Time: 3092.3488 s, Time this epoch: 105.1986 s
+=====> Epoch: 22/300, Train Loss (train loader labels): 1.5928, Train acc (train loader labels): 0.4826, Best val acc: 0.6631, Current val acc: 0.5919, Val Loss: 1.1769
+=====> Saving current model and best model
+selecting samples for epoch 23
+balance: False
+ratio: 0.1
+=====> Epoch: 23/300, Total_step: 4324, lr: 0.001000, Total Time: 3198.1378 s, Time this epoch: 105.6159 s
+=====> Epoch: 23/300, Train Loss (train loader labels): 1.6475, Train acc (train loader labels): 0.4692, Best val acc: 0.6631, Current val acc: 0.6358, Val Loss: 1.1388
+=====> Saving current model and best model
+selecting samples for epoch 24
+balance: False
+ratio: 0.1
+=====> Epoch: 24/300, Total_step: 4512, lr: 0.001000, Total Time: 3303.7403 s, Time this epoch: 105.4634 s
+=====> Epoch: 24/300, Train Loss (train loader labels): 1.7116, Train acc (train loader labels): 0.4410, Best val acc: 0.6631, Current val acc: 0.5151, Val Loss: 1.3348
+=====> Saving current model and best model
+selecting samples for epoch 25
+balance: False
+ratio: 0.1
+=====> Epoch: 25/300, Total_step: 4700, lr: 0.001000, Total Time: 3409.6031 s, Time this epoch: 105.6948 s
+=====> Epoch: 25/300, Train Loss (train loader labels): 1.6199, Train acc (train loader labels): 0.4663, Best val acc: 0.6631, Current val acc: 0.5907, Val Loss: 1.2013
+=====> Saving current model and best model
+selecting samples for epoch 26
+balance: False
+ratio: 0.1
+=====> Epoch: 26/300, Total_step: 4888, lr: 0.001000, Total Time: 3515.6520 s, Time this epoch: 105.9043 s
+=====> Epoch: 26/300, Train Loss (train loader labels): 1.6782, Train acc (train loader labels): 0.4809, Best val acc: 0.6631, Current val acc: 0.6530, Val Loss: 1.1547
+=====> Saving current model and best model
+selecting samples for epoch 27
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 28
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 29
+balance: False
+ratio: 0.1
+=====> Epoch: 29/300, Total_step: 5452, lr: 0.001000, Total Time: 3721.9593 s, Time this epoch: 50.0083 s
+=====> Epoch: 29/300, Train Loss (train loader labels): 1.6131, Train acc (train loader labels): 0.4679, Best val acc: 0.6631, Current val acc: 0.5918, Val Loss: 1.2109
+=====> Saving current model and best model
+selecting samples for epoch 30
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 31
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 32
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 33
+balance: False
+ratio: 0.1
+=====> Epoch: 33/300, Total_step: 6204, lr: 0.001000, Total Time: 3978.1332 s, Time this epoch: 50.1790 s
+=====> Epoch: 33/300, Train Loss (train loader labels): 1.6329, Train acc (train loader labels): 0.4500, Best val acc: 0.6631, Current val acc: 0.5177, Val Loss: 1.2728
+=====> Saving current model and best model
+selecting samples for epoch 34
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 35
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 36
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 37
+balance: False
+ratio: 0.1
+=====> Epoch: 37/300, Total_step: 6956, lr: 0.001000, Total Time: 4234.5105 s, Time this epoch: 49.9990 s
+=====> Epoch: 37/300, Train Loss (train loader labels): 1.5698, Train acc (train loader labels): 0.4961, Best val acc: 0.6631, Current val acc: 0.6185, Val Loss: 1.1556
+=====> Saving current model and best model
+selecting samples for epoch 38
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 39
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 40
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 41
+balance: False
+ratio: 0.1
+=====> Epoch: 41/300, Total_step: 7708, lr: 0.001000, Total Time: 4490.8163 s, Time this epoch: 50.2840 s
+=====> Epoch: 41/300, Train Loss (train loader labels): 1.6539, Train acc (train loader labels): 0.4722, Best val acc: 0.6631, Current val acc: 0.6231, Val Loss: 1.1822
+=====> Saving current model and best model
+selecting samples for epoch 42
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 43
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 44
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 45
+balance: False
+ratio: 0.1
+=====> Epoch: 45/300, Total_step: 8460, lr: 0.001000, Total Time: 4747.4060 s, Time this epoch: 49.9500 s
+=====> Epoch: 45/300, Train Loss (train loader labels): 1.6421, Train acc (train loader labels): 0.4803, Best val acc: 0.6631, Current val acc: 0.6268, Val Loss: 1.1403
+=====> Saving current model and best model
+selecting samples for epoch 46
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 47
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 48
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 49
+balance: False
+ratio: 0.1
+=====> Epoch: 49/300, Total_step: 9212, lr: 0.001000, Total Time: 5003.7941 s, Time this epoch: 50.2647 s
+=====> Epoch: 49/300, Train Loss (train loader labels): 1.6150, Train acc (train loader labels): 0.4884, Best val acc: 0.6631, Current val acc: 0.6564, Val Loss: 1.1107
+=====> Saving current model and best model
+selecting samples for epoch 50
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 51
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 52
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 53
+balance: False
+ratio: 0.1
+=====> Epoch: 53/300, Total_step: 9964, lr: 0.001000, Total Time: 5260.5211 s, Time this epoch: 50.1403 s
+=====> Epoch: 53/300, Train Loss (train loader labels): 1.6366, Train acc (train loader labels): 0.4854, Best val acc: 0.6631, Current val acc: 0.6042, Val Loss: 1.2105
+=====> Saving current model and best model
+selecting samples for epoch 54
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 55
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 56
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 57
+balance: False
+ratio: 0.1
+=====> Epoch: 57/300, Total_step: 10716, lr: 0.001000, Total Time: 5516.6088 s, Time this epoch: 50.0007 s
+=====> Epoch: 57/300, Train Loss (train loader labels): 1.6163, Train acc (train loader labels): 0.4820, Best val acc: 0.6631, Current val acc: 0.5956, Val Loss: 1.1560
+=====> Saving current model and best model
+selecting samples for epoch 58
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 59
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 60
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 61
+balance: False
+ratio: 0.1
+=====> Epoch: 61/300, Total_step: 11468, lr: 0.001000, Total Time: 5773.4570 s, Time this epoch: 50.0331 s
+=====> Epoch: 61/300, Train Loss (train loader labels): 1.5852, Train acc (train loader labels): 0.4875, Best val acc: 0.6725, Current val acc: 0.6725, Val Loss: 1.0788
+=====> Saving current model and best model
+selecting samples for epoch 62
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 63
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 64
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 65
+balance: False
+ratio: 0.1
+=====> Epoch: 65/300, Total_step: 12220, lr: 0.001000, Total Time: 6029.7308 s, Time this epoch: 50.3024 s
+=====> Epoch: 65/300, Train Loss (train loader labels): 1.5736, Train acc (train loader labels): 0.5039, Best val acc: 0.6725, Current val acc: 0.6591, Val Loss: 1.1142
+=====> Saving current model and best model
+selecting samples for epoch 66
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 67
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 68
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 69
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 70
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 71
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 72
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 73
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 74
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 75
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 76
+balance: False
+ratio: 0.1
+=====> Epoch: 76/300, Total_step: 14288, lr: 0.001000, Total Time: 6638.5945 s, Time this epoch: 50.3058 s
+=====> Epoch: 76/300, Train Loss (train loader labels): 1.5817, Train acc (train loader labels): 0.4876, Best val acc: 0.6725, Current val acc: 0.6127, Val Loss: 1.1995
+=====> Saving current model and best model
+selecting samples for epoch 77
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 78
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 79
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 80
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 81
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 82
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 83
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 84
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 85
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 86
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 87
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 88
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 89
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 90
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 91
+balance: False
+ratio: 0.1
+=====> Epoch: 91/300, Total_step: 17108, lr: 0.001000, Total Time: 7449.0176 s, Time this epoch: 50.1977 s
+=====> Epoch: 91/300, Train Loss (train loader labels): 1.5758, Train acc (train loader labels): 0.4959, Best val acc: 0.6725, Current val acc: 0.6294, Val Loss: 1.1034
+=====> Saving current model and best model
+selecting samples for epoch 92
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 93
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 94
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 95
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 96
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 97
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 98
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 99
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 100
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 101
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 102
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 103
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 104
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 105
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 106
+balance: False
+ratio: 0.1
+=====> Epoch: 106/300, Total_step: 19928, lr: 0.001000, Total Time: 8258.7410 s, Time this epoch: 50.1367 s
+=====> Epoch: 106/300, Train Loss (train loader labels): 1.7169, Train acc (train loader labels): 0.4506, Best val acc: 0.6725, Current val acc: 0.5463, Val Loss: 1.2967
+=====> Saving current model and best model
+selecting samples for epoch 107
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 108
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 109
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 110
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 111
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 112
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 113
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 114
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 115
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 116
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 117
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 118
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 119
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 120
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 121
+balance: False
+ratio: 0.1
+=====> Epoch: 121/300, Total_step: 22748, lr: 0.001000, Total Time: 9068.1560 s, Time this epoch: 50.2195 s
+=====> Epoch: 121/300, Train Loss (train loader labels): 1.5799, Train acc (train loader labels): 0.4980, Best val acc: 0.6944, Current val acc: 0.6944, Val Loss: 1.0462
+=====> Saving current model and best model
+selecting samples for epoch 122
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 123
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 124
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 125
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 126
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 127
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 128
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 129
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 130
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 131
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 132
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 133
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 134
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 135
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 136
+balance: False
+ratio: 0.1
+=====> Epoch: 136/300, Total_step: 25568, lr: 0.001000, Total Time: 9878.5251 s, Time this epoch: 50.1256 s
+=====> Epoch: 136/300, Train Loss (train loader labels): 1.5849, Train acc (train loader labels): 0.4900, Best val acc: 0.6944, Current val acc: 0.6239, Val Loss: 1.1553
+=====> Saving current model and best model
+selecting samples for epoch 137
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 138
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 139
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 140
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 141
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 142
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 143
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 144
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 145
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 146
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 147
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 148
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 149
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 150
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 151
+balance: False
+ratio: 0.1
+=====> Epoch: 151/300, Total_step: 28388, lr: 0.001000, Total Time: 10686.7642 s, Time this epoch: 50.2634 s
+=====> Epoch: 151/300, Train Loss (train loader labels): 1.6125, Train acc (train loader labels): 0.5004, Best val acc: 0.6944, Current val acc: 0.6661, Val Loss: 1.1043
+=====> Saving current model and best model
+selecting samples for epoch 152
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 153
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 154
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 155
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 156
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 157
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 158
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 159
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 160
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 161
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 162
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 163
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 164
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 165
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 166
+balance: False
+ratio: 0.1
+=====> Epoch: 166/300, Total_step: 31208, lr: 0.001000, Total Time: 11496.4404 s, Time this epoch: 49.9604 s
+=====> Epoch: 166/300, Train Loss (train loader labels): 1.5688, Train acc (train loader labels): 0.5001, Best val acc: 0.6944, Current val acc: 0.6800, Val Loss: 1.0897
+=====> Saving current model and best model
+selecting samples for epoch 167
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 168
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 169
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 170
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 171
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 172
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 173
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 174
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 175
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 176
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 177
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 178
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 179
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 180
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 181
+balance: False
+ratio: 0.1
+=====> Epoch: 181/300, Total_step: 34028, lr: 0.001000, Total Time: 12306.1839 s, Time this epoch: 50.1479 s
+=====> Epoch: 181/300, Train Loss (train loader labels): 1.5908, Train acc (train loader labels): 0.4996, Best val acc: 0.6944, Current val acc: 0.6215, Val Loss: 1.1511
+=====> Saving current model and best model
+selecting samples for epoch 182
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 183
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 184
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 185
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 186
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 187
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 188
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 189
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 190
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 191
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 192
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 193
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 194
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 195
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 196
+balance: False
+ratio: 0.1
+=====> Epoch: 196/300, Total_step: 36848, lr: 0.001000, Total Time: 13115.5963 s, Time this epoch: 50.0547 s
+=====> Epoch: 196/300, Train Loss (train loader labels): 1.6353, Train acc (train loader labels): 0.4771, Best val acc: 0.6944, Current val acc: 0.5855, Val Loss: 1.2277
+=====> Saving current model and best model
+selecting samples for epoch 197
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 198
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 199
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 200
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 201
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 202
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 203
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 204
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 205
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 206
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 207
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 208
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 209
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 210
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 211
+balance: False
+ratio: 0.1
+=====> Epoch: 211/300, Total_step: 39668, lr: 0.001000, Total Time: 13926.6637 s, Time this epoch: 50.3504 s
+=====> Epoch: 211/300, Train Loss (train loader labels): 1.7154, Train acc (train loader labels): 0.4481, Best val acc: 0.6944, Current val acc: 0.6030, Val Loss: 1.1453
+=====> Saving current model and best model
+selecting samples for epoch 212
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 213
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 214
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 215
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 216
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 217
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 218
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 219
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 220
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 221
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 222
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 223
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 224
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 225
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 226
+balance: False
+ratio: 0.1
+=====> Epoch: 226/300, Total_step: 42488, lr: 0.001000, Total Time: 14738.2928 s, Time this epoch: 50.1253 s
+=====> Epoch: 226/300, Train Loss (train loader labels): 1.5192, Train acc (train loader labels): 0.5247, Best val acc: 0.6944, Current val acc: 0.6908, Val Loss: 1.0412
+=====> Saving current model and best model
+selecting samples for epoch 227
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 228
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 229
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 230
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 231
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 232
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 233
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 234
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 235
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 236
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 237
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 238
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 239
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 240
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 241
+balance: False
+ratio: 0.1
+=====> Epoch: 241/300, Total_step: 45308, lr: 0.001000, Total Time: 15549.0448 s, Time this epoch: 50.2749 s
+=====> Epoch: 241/300, Train Loss (train loader labels): 1.5775, Train acc (train loader labels): 0.4965, Best val acc: 0.6944, Current val acc: 0.6085, Val Loss: 1.1439
+=====> Saving current model and best model
+selecting samples for epoch 242
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 243
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 244
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 245
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 246
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 247
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 248
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 249
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 250
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 251
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 252
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 253
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 254
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 255
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 256
+balance: False
+ratio: 0.1
+=====> Epoch: 256/300, Total_step: 48128, lr: 0.001000, Total Time: 16359.2402 s, Time this epoch: 50.0169 s
+=====> Epoch: 256/300, Train Loss (train loader labels): 1.5484, Train acc (train loader labels): 0.5148, Best val acc: 0.6944, Current val acc: 0.6541, Val Loss: 1.0682
+=====> Saving current model and best model
+selecting samples for epoch 257
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 258
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 259
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 260
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 261
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 262
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 263
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 264
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 265
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 266
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 267
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 268
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 269
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 270
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 271
+balance: False
+ratio: 0.1
+=====> Epoch: 271/300, Total_step: 50948, lr: 0.001000, Total Time: 17169.8002 s, Time this epoch: 50.1857 s
+=====> Epoch: 271/300, Train Loss (train loader labels): 1.5470, Train acc (train loader labels): 0.5099, Best val acc: 0.6944, Current val acc: 0.6600, Val Loss: 1.0662
+=====> Saving current model and best model
+selecting samples for epoch 272
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 273
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 274
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 275
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 276
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 277
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 278
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 279
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 280
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 281
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 282
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 283
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 284
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 285
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 286
+balance: False
+ratio: 0.1
+=====> Epoch: 286/300, Total_step: 53768, lr: 0.001000, Total Time: 17979.0937 s, Time this epoch: 50.4229 s
+=====> Epoch: 286/300, Train Loss (train loader labels): 1.5773, Train acc (train loader labels): 0.4849, Best val acc: 0.6944, Current val acc: 0.6097, Val Loss: 1.1146
+=====> Saving current model and best model
+selecting samples for epoch 287
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 288
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 289
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 290
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 291
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 292
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 293
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 294
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 295
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 296
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 297
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 298
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 299
+balance: False
+ratio: 0.1
+=====> Saving current model and best model
+selecting samples for epoch 300
+balance: False
+ratio: 0.1
+=====> Epoch: 300/300, Total_step: 56400, lr: 0.001000, Total Time: 18740.0504 s, Time this epoch: 50.1210 s
+=====> Epoch: 300/300, Train Loss (train loader labels): 1.5523, Train acc (train loader labels): 0.4969, Best val acc: 0.6944, Current val acc: 0.5917, Val Loss: 1.1564
+=====> Saving current model and best model
+Saved helper snapshots to /home/mward19/Documents/miller/Online-Batch-Selection/snapshots/MNIST/{"bsel":"Uniform","seed":3,"model":"DeepLinear","opt":"adamw","bs":320,"ratio":0.1,"lr":0.001,"wd":0.01,"layers":3,"hidden_dim":1000}.p
+Saved selected points array to /home/mward19/Documents/miller/Online-Batch-Selection/selected_points/MNIST/{"bsel":"Uniform","seed":3,"model":"DeepLinear","opt":"adamw","bs":320,"ratio":0.1,"lr":0.001,"wd":0.01,"layers":3,"hidden_dim":1000}.npy
+========================= End Main =========================

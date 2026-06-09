@@ -1,0 +1,33 @@
+wandb: Tracking run with wandb version 0.27.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in exp/MNIST/DivBS_deeplinear_bs320_ep300_lr0.001_AdamW_constant_seed2_r0.1_5_hidden/wandb/offline-run-20260605_185327-zml4t07n
+wandb: 
+wandb: Run history:
+wandb:                                best_val_acc ▁▃▅▆▆▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇████████████████
+wandb:                           diagnostics/epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▃▃▃▄▅▆▇▇█
+wandb: diagnostics/fixed_train_logits_norm_l2_mean ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁
+wandb:        diagnostics/test_logits_norm_l2_mean ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁█▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                      diagnostics/total_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▃▃▄▄▅▅▆▇█
+wandb:                                       epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▃▃▄▄▅▅▆▆▇█
+wandb:                                          lr ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                                  time_epoch ▁▁▁▁▁█████████▄▄▄▄▄▄▄▄▄▄▄▄▂▂▂▂▂▂▂▂▂▂▂▂▂▂
+wandb:                                  total_time ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▃▃▄▄▆▇▇▇█
+wandb:                                   train_acc ▁▃▆▆▆▆▆▆▆▆▆▆▇▆▇▇▇▇▆▆▇▇▇▇▇█████▇▇████████
+wandb:                                          +5 ...
+wandb: 
+wandb: Run summary:
+wandb:                                best_val_acc 0.6794
+wandb:                           diagnostics/epoch 300
+wandb: diagnostics/fixed_train_logits_norm_l2_mean 10.73548
+wandb:        diagnostics/test_logits_norm_l2_mean 10.17578
+wandb:                      diagnostics/total_step 56400
+wandb:                         diagnostics/trigger batch_update
+wandb:                                       epoch 300
+wandb:                                          lr 0.001
+wandb:                                  time_epoch 49.37103
+wandb:                                  total_time 18466.56236
+wandb:                                          +6 ...
+wandb: 
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync exp/MNIST/DivBS_deeplinear_bs320_ep300_lr0.001_AdamW_constant_seed2_r0.1_5_hidden/wandb/offline-run-20260605_185327-zml4t07n
+wandb: Find logs at: exp/MNIST/DivBS_deeplinear_bs320_ep300_lr0.001_AdamW_constant_seed2_r0.1_5_hidden/wandb/offline-run-20260605_185327-zml4t07n/logs

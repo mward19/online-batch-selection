@@ -6,17 +6,17 @@ method_opt:
   warmup_epochs: 0
   uniform_epochs: 0
 
-teacher_model_source: local_pretrained # Supported options: "local_pretrained", "clip", "timm"
-teacher_model_path: /home/lgreen/projects/Online_BS/models/teacher/MNIST.tar
+teacher_model_source: clip # Supported options: "local_pretrained", "clip", "timm"
+# teacher_model_path: /home/lgreen/projects/Online_BS/models/teacher/MNIST.tar
 # teacher_model_path: /home/phancock/Online-Batch-Selection/exp/cifar10_small-cnn_30-epoch.tar
 
 # If local_pretrained is selected, specify the model architecture here
-local_pretrained:
-  type: LeNet
-  params: 
-    m_type: 'lenet'
+# local_pretrained:
+#   type: LeNet
+#   params: 
+#     m_type: 'lenet'
 
 # If Clip is selected, specify the model architecture here
-# clip:
-#   clip_architecture: 'RN50'
-#   tau: 4
+clip:
+  clip_architecture: 'RN50'
+  tau: 4

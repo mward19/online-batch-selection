@@ -6,6 +6,9 @@ from methods.method_utils.ntk import NTKDiagnostics
 from methods.method_utils.param_grad import ParamGradDiagnostics
 from methods.method_utils.probe import ProbeDiagnostics
 from methods.method_utils.snapshots import SnapshotManager
+from methods.method_utils.weights import WeightDiagnostics
+
+from datetime import timedelta
 
 
 class DiagnosticsLogger:
@@ -80,6 +83,11 @@ class DiagnosticsLogger:
             teacher_model_config=teacher_model_config,
             save_spectral_decay=local_spectral_decay,
         )
+        self.weight_matrix_diagnostics = WeightDiagnostics(
+            logger=self.logger,
+            context=context,
+            enabled=True, # TEMP
+        )
         self.should_log_probe = self.probe_diagnostics.enabled
         self.should_log_ntk = self.ntk_diagnostics.enabled
         self.snapshots = self.snapshot_manager.snapshots
@@ -151,6 +159,7 @@ class DiagnosticsLogger:
                 log_data['epoch'] = int(epoch)
                 log_data['lr'] = float(lr)
                 log_data['total_time'] = float(total_time)
+                log_data["total_time_str"] = str(timedelta(seconds=int(total_time)))
                 log_data['time_epoch'] = float(time_this_epoch)
 
             if self.wandb_normed_logits:
@@ -168,6 +177,9 @@ class DiagnosticsLogger:
 
         if self.should_log_ntk:
             log_data.update(self.ntk_diagnostics.log_metrics(model, device, total_step=total_step))
+        
+        # TEMP: log norms of weights
+        log_data.update()
 
         self.logger.wandb_log(log_data, step=int(total_step))
 

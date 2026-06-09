@@ -1,0 +1,45 @@
+wandb: Tracking run with wandb version 0.27.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in exp/CIFAR3/Bayesian_deeplinear_bs320_ep300_lr0.001_AdamW_constant_seed3_r0.1_5_hidden/wandb/offline-run-20260605_170418-ip2xhz2q
+/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py:211: RuntimeWarning: A not p.d., added jitter of 1.0 to the diagonal
+  warnings.warn(
+/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py:211: RuntimeWarning: A not p.d., added jitter of 10.0 to the diagonal
+  warnings.warn(
+/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py:211: RuntimeWarning: A not p.d., added jitter of 100.0 to the diagonal
+  warnings.warn(
+/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py:211: RuntimeWarning: A not p.d., added jitter of 1000.0 to the diagonal
+  warnings.warn(
+/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py:211: RuntimeWarning: A not p.d., added jitter of 0.09999999999999999 to the diagonal
+  warnings.warn(
+/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py:211: RuntimeWarning: A not p.d., added jitter of 0.01 to the diagonal
+  warnings.warn(
+wandb: 
+wandb: Run history:
+wandb:                                best_val_acc ▁▁▁▅▅▅▅▅▅▅▅▅▅▅▅▆▆▆▆▆▇▇▇▇▇▇▇▇▇▇▇▇▇▇██████
+wandb:                           diagnostics/epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▃▃▄▅▅▆▆▆█
+wandb: diagnostics/fixed_train_logits_norm_l2_mean ▁█▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▁▁▁▁▁
+wandb:        diagnostics/test_logits_norm_l2_mean █▃▂▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                      diagnostics/total_step ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▃▃▄▄▄▆▆▇▇█
+wandb:                                       epoch ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▃▃▃▄▅▅▆▆▇█
+wandb:                                          lr ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
+wandb:                                  time_epoch ▁▁▁▁▁████████████▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂
+wandb:                                  total_time ▁▁▁▁▁▁▁▁▁▁▁▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▃▃▃▃▃▃▄▄▆▆▇▇█
+wandb:                                   train_acc ▂▁▆▂▄▆▆▆▇▆▆▆▆▆▆▇▆▇▆█▅█▆▆▇▆█▇▆▆▇▆▅▇▃▅█▆▇▇
+wandb:                                          +5 ...
+wandb: 
+wandb: Run summary:
+wandb:                                best_val_acc 0.46833
+wandb:                           diagnostics/epoch 300
+wandb: diagnostics/fixed_train_logits_norm_l2_mean 1.91757
+wandb:        diagnostics/test_logits_norm_l2_mean 1.91862
+wandb:                      diagnostics/total_step 14100
+wandb:                         diagnostics/trigger batch_update
+wandb:                                       epoch 300
+wandb:                                          lr 0.001
+wandb:                                  time_epoch 17.07185
+wandb:                                  total_time 6598.88195
+wandb:                                          +6 ...
+wandb: 
+wandb: You can sync this run to the cloud by running:
+wandb: wandb sync exp/CIFAR3/Bayesian_deeplinear_bs320_ep300_lr0.001_AdamW_constant_seed3_r0.1_5_hidden/wandb/offline-run-20260605_170418-ip2xhz2q
+wandb: Find logs at: exp/CIFAR3/Bayesian_deeplinear_bs320_ep300_lr0.001_AdamW_constant_seed3_r0.1_5_hidden/wandb/offline-run-20260605_170418-ip2xhz2q/logs

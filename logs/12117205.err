@@ -1,0 +1,55 @@
+wandb: Tracking run with wandb version 0.27.0
+wandb: W&B syncing is set to `offline` in this directory. Run `wandb online` or set WANDB_MODE=online to enable cloud syncing.
+wandb: Run data is saved locally in exp/MNIST/Bayesian_deeplinear_bs320_ep300_lr0.001_AdamW_constant_seed3_r0.1_8_hidden/wandb/offline-run-20260605_190126-z7vu3m8d
+/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py:211: RuntimeWarning: A not p.d., added jitter of 100.0 to the diagonal
+  warnings.warn(
+/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py:211: RuntimeWarning: A not p.d., added jitter of 1000.0 to the diagonal
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/main.py", line 283, in <module>
+    main()
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/main.py", line 274, in main
+    Method.run()
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/methods/SelectionMethod.py", line 206, in run
+    self.train(epoch)
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/methods/SelectionMethod.py", line 306, in train
+    minibatch = self.before_batch(
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/methods/Bayesian.py", line 172, in before_batch
+    indices = self.bayesian_selection(inputs, targets, indexes, number_to_select)
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/methods/Bayesian.py", line 131, in bayesian_selection
+    f_samples, outputs, stds, L_U_T_inverse = self.model(
+  File "/home/mward19/.conda/envs/online-bs-p100/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/mward19/.conda/envs/online-bs-p100/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py", line 69, in forward
+    L_V = psd_safe_cholesky(V)
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py", line 219, in psd_safe_cholesky
+    raise e
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py", line 192, in psd_safe_cholesky
+    L = torch.linalg.cholesky(A, upper=upper, out=out)
+torch._C._LinAlgError: linalg.cholesky: The factorization could not be completed because the input is not positive-definite (the leading minor of order 22 is not positive-definite).
+Traceback (most recent call last):
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/main.py", line 283, in <module>
+    main()
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/main.py", line 274, in main
+    Method.run()
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/methods/SelectionMethod.py", line 206, in run
+    self.train(epoch)
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/methods/SelectionMethod.py", line 306, in train
+    minibatch = self.before_batch(
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/methods/Bayesian.py", line 172, in before_batch
+    indices = self.bayesian_selection(inputs, targets, indexes, number_to_select)
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/methods/Bayesian.py", line 131, in bayesian_selection
+    f_samples, outputs, stds, L_U_T_inverse = self.model(
+  File "/home/mward19/.conda/envs/online-bs-p100/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1751, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/mward19/.conda/envs/online-bs-p100/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1762, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py", line 69, in forward
+    L_V = psd_safe_cholesky(V)
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py", line 219, in psd_safe_cholesky
+    raise e
+  File "/home/mward19/Documents/miller/Online-Batch-Selection/models/BayesNet.py", line 192, in psd_safe_cholesky
+    L = torch.linalg.cholesky(A, upper=upper, out=out)
+torch._C._LinAlgError: linalg.cholesky: The factorization could not be completed because the input is not positive-definite (the leading minor of order 22 is not positive-definite).
