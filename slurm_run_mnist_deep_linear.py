@@ -3,10 +3,13 @@ from pathlib import Path
 from textwrap import dedent
 from datetime import datetime
 from tqdm import tqdm
+import shlex
 import subprocess
 import re
 
 WANDB_PROJECT = "Matthew—Deep Linear Networks (Blobs)"
+
+USE_SLURM = True
 
 # SEEDS = [1, 2, 3]
 SEEDS = [1]
@@ -41,7 +44,7 @@ jobs = list(product(SEEDS, DATAS, MODELS, OPTIMS, METHODS))
 with open(save_dirs_file, "w") as f:
     for seed, data, model, optim, method in tqdm(
         jobs,
-        desc="Submitting jobs",
+        desc="Submitting jobs" if USE_SLURM else "Running jobs",
         total=len(jobs),
     ):
         subprocess.run(
@@ -73,49 +76,54 @@ with open(save_dirs_file, "w") as f:
         f.write(save_dir + "\n")
         f.flush()
 
-        sbatch_script = dedent(
-            f"""\
-            #!/bin/bash
-            #SBATCH --job-name=cifar_s{seed}
-            #SBATCH --output=logs/%j.out
-            #SBATCH --error=logs/%j.err
-            #SBATCH --gres=gpu:1
-            #SBATCH --cpus-per-task=4
-            #SBATCH --mem=32GB
-            #SBATCH --time=8:00:00
+        python_cmd = [
+            "python", "main.py",
+            "--method", method,
+            "--data", data,
+            "--model", model,
+            "--optim", optim,
+            "--diagnostics", DIAGNOSTICS,
+            "--seed", str(seed),
+            "--save_dir", save_dir,
+            "--wandb_project", WANDB_PROJECT,
+        ]
 
-            echo "save_dir: {save_dir}"
+        if USE_SLURM:
+            sbatch_script = dedent(
+                f"""\
+                #!/bin/bash
+                #SBATCH --job-name=cifar_s{seed}
+                #SBATCH --output=logs/%j.out
+                #SBATCH --error=logs/%j.err
+                #SBATCH --gres=gpu:1
+                #SBATCH --cpus-per-task=4
+                #SBATCH --mem=32GB
+                #SBATCH --time=8:00:00
 
-            python main.py \\
-                --method "{method}" \\
-                --data "{data}" \\
-                --model "{model}" \\
-                --optim "{optim}" \\
-                --diagnostics "{DIAGNOSTICS}" \\
-                --seed "{seed}" \\
-                --save_dir "{save_dir}" \\
-                --wandb_not_upload \\
-                --wandb_project "{WANDB_PROJECT}"
-            """
-        )
+                echo "save_dir: {save_dir}"
 
-        subprocess.run(
-            ["sbatch"],
-            input=sbatch_script,
-            text=True,
-            check=True,
-        )
+                {shlex.join(python_cmd + ['--wandb_not_upload'])}
+                """
+            )
+            subprocess.run(
+                ["sbatch"],
+                input=sbatch_script,
+                text=True,
+                check=True,
+            )
+        else:
+            subprocess.run(python_cmd, check=True)
 
-print(
-    "All jobs submitted. Running Weights & Biases sync daemon. Ctrl+C to stop syncing"
-)
-
-subprocess.run(
-    [
-        "python",
-        "wandb-sync-daemon.py",
-        "--save_dirs",
-        str(save_dirs_file),
-    ],
-    check=True,
-)
+if USE_SLURM:
+    print("All jobs submitted. Running Weights & Biases sync daemon. Ctrl+C to stop syncing")
+    subprocess.run(
+        [
+            "python",
+            "wandb-sync-daemon.py",
+            "--save_dirs",
+            str(save_dirs_file),
+        ],
+        check=True,
+    )
+else:
+    print("All jobs complete.")

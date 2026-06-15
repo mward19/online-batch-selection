@@ -29,6 +29,10 @@ class DiagnosticsLogger:
         self.local_points_selected = bool(diagnostics_config.get('local_points_selected', False))
         self.local_best_model_checkpoints = bool(diagnostics_config.get('local_best_model_checkpoints', False))
         self.wandb_loss_acc = bool(diagnostics_config.get('wandb_loss_acc', False))
+        self.wandb_wstar_acc = bool(diagnostics_config.get('wandb_wstar_acc', False))
+        self.wstar_test_acc  = context.wstar_test_acc
+        self.what_test_acc   = context.what_test_acc
+        self.bayes_accuracy  = context.bayes_accuracy
         self.wandb_normed_logits = bool(diagnostics_config.get('wandb_normed_logits', False))
         self.wandb_param_norms = bool(diagnostics_config.get('wandb_param_norms', False))
         self.wandb_weight_matrix_norms = bool(diagnostics_config.get('wandb_weight_matrix_norms', False))
@@ -84,10 +88,15 @@ class DiagnosticsLogger:
             teacher_model_config=teacher_model_config,
             save_spectral_decay=local_spectral_decay,
         )
+        weight_matrix_param_names = diagnostics_config.get('weight_matrix_param_names') or None
+        weight_matrix_last_n_layers = diagnostics_config.get('weight_matrix_last_n_layers')
+        weight_matrix_last_n_layers = int(weight_matrix_last_n_layers) if weight_matrix_last_n_layers is not None else None
         self.weight_matrix_diagnostics = WeightMatrixDiagnostics(
             logger=self.logger,
             context=context,
             enabled=self.wandb_weight_matrix_norms,
+            param_names=weight_matrix_param_names,
+            last_n_layers=weight_matrix_last_n_layers,
         )
         self.should_log_probe = self.probe_diagnostics.enabled
         self.should_log_ntk = self.ntk_diagnostics.enabled
@@ -95,6 +104,13 @@ class DiagnosticsLogger:
 
         if self.wandb_ntk and not self.should_log_ntk:
             self.logger.info('Warning: disabling NTK diagnostics because ntk_max_samples or ntk_top_k is non-positive.')
+
+        if self.wandb_wstar_acc and self.wstar_test_acc is not None:
+            wandb.summary['wstar_test_acc'] = self.wstar_test_acc
+        if self.what_test_acc is not None:
+            wandb.summary['what_test_acc'] = self.what_test_acc
+        if self.bayes_accuracy is not None:
+            wandb.summary['bayes_accuracy'] = self.bayes_accuracy
 
     @property
     def best_acc(self):

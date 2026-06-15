@@ -28,6 +28,7 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     alpha_tag = f'alpha{args.alpha}'
+    cscale_tag = f'cscale{args.center_scale}'
 
     # 1. Generate ground-truth direction w*
     rng = np.random.default_rng(args.center_seed)
@@ -36,8 +37,8 @@ def main():
 
     # 2. Save cluster centers (shape 2 x d) and w*
     centers = np.stack([+args.center_scale * w_star, -args.center_scale * w_star])
-    centers_path = out_dir / f'makeblobs_{d}d_centers_seed{args.center_seed}.npy'
-    wstar_path   = out_dir / f'makeblobs_{d}d_wstar_seed{args.center_seed}.npy'
+    centers_path = out_dir / f'makeblobs_{d}d_{cscale_tag}_centers_seed{args.center_seed}.npy'
+    wstar_path   = out_dir / f'makeblobs_{d}d_{cscale_tag}_wstar_seed{args.center_seed}.npy'
     np.save(centers_path, centers)
     np.save(wstar_path, w_star)
     print(f'Saved centers : {centers_path}')
@@ -55,13 +56,13 @@ def main():
     print(f'alpha={args.alpha}, noise_std={noise_std:.5f}, theta={theta_deg:.1f} deg')
 
     # 4. Save w_hat and teacher state dict
-    wnoised_path = out_dir / f'makeblobs_{d}d_wnoised_{alpha_tag}_nseed{args.noise_seed}.npy'
-    teacher_path = out_dir / f'makeblobs_{d}d_hyperplane_{alpha_tag}_nseed{args.noise_seed}.pth'
+    wnoised_path = out_dir / f'makeblobs_{d}d_{cscale_tag}_wnoised_{alpha_tag}_nseed{args.noise_seed}.npy'
+    teacher_path = out_dir / f'makeblobs_{d}d_{cscale_tag}_hyperplane_{alpha_tag}_nseed{args.noise_seed}.pth'
     np.save(wnoised_path, w_hat)
 
     w_hat_t = torch.from_numpy(w_hat)
     state_dict = {
-        'fc.weight': torch.stack([-w_hat_t, +w_hat_t]),
+        'fc.weight': torch.stack([+w_hat_t, -w_hat_t]),
         'fc.bias':   torch.zeros(2),
     }
     torch.save(state_dict, teacher_path)

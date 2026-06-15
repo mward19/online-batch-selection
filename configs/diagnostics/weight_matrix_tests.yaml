@@ -1,0 +1,31 @@
+diagnostics:
+  log_interval: logarithmic
+  save_init: 5
+  save_freq: 4
+  local_snapshots: true
+  local_points_selected: true
+  local_best_model_checkpoints: false
+  wandb_loss_acc: true
+  wandb_normed_logits: true
+  wandb_param_norms: false
+  wandb_grad_norms: false
+  wandb_linear_probe: false
+  wandb_ntk: false
+  local_spectral_decay: false
+
+  wandb_weight_matrix_norms: true
+  wandb_wstar_acc: true
+  weight_matrix_last_n_layers: 5
+  # weight_matrix_param_names: [layers.0.weight, layers.1.weight]
+  # layers: []
+  # wandb_histogram_max_points: 200000
+  # linear_probe_max_iter: 300
+  # ntk_max_samples: 1000
+  # ntk_top_k: 10
+  # ntk_teacher_model:
+  #   source: local_pretrained
+  #   path: /absolute/path/to/teacher_model.pth
+  #   local_pretrained:
+  #     type: LeNet
+  #     params:
+  #       m_type: 'lenet'

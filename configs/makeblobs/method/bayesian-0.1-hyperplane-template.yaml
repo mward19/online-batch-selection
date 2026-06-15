@@ -1,0 +1,22 @@
+method: Bayesian
+method_opt:
+  ratio: 0.1
+  balance: False
+  ratio_scheduler: constant
+  warmup_epochs: 0
+
+# Online Laplace Approximation Parameters
+adaptive_alpha: False
+alpha: 0.2
+prior_precision: 10
+num_effective_data: 200
+laplace_momentum: 0.99
+n_f_samples: 256
+
+teacher_model_source: local_pretrained
+teacher_model_path: null
+
+local_pretrained:
+  type: Linear
+  params:
+    m_type: linear

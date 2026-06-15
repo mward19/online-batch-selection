@@ -120,6 +120,9 @@ class SelectionMethod(object):
             checkpoint_saver=self.save_checkpoint,
             noisy_indices=self.data_info.get('noisy_indices'),
             true_labels=self.data_info.get('true_labels'),
+            wstar_test_acc=self.data_info.get('wstar_test_acc'),
+            what_test_acc=self.data_info.get('what_test_acc'),
+            bayes_accuracy=self.config.get('bayes_accuracy'),
         )
         self.diagnostics_logger = DiagnosticsLogger(
             logger=self.logger,

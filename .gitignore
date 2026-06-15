@@ -28,6 +28,7 @@ wandb/
 # vscode
 .vscode/
 
+configs/makeblobs/generated/
 results/
 runs/
 models/teacher

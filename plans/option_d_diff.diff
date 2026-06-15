@@ -1,0 +1,98 @@
+diff --git a/slurm_run_blobs_deep_linear.py b/slurm_run_blobs_deep_linear.py
+@@ -53,6 +53,7 @@ def write_generated_configs(dims, center_scales):
+         cfg['dataset']['n_features']  = d
+         cfg['dataset']['input_dim']   = [1, d]
+         cfg['dataset']['center_file'] = f"models/teacher/makeblobs_{d}d_cscale{cs}_centers_seed42.npy"
++        cfg['dataset']['wstar_file']  = f"models/teacher/makeblobs_{d}d_cscale{cs}_wstar_seed42.npy"
+         cfg['bayes_accuracy'] = round(float(ndtr(cs)), 3)
+
+diff --git a/data/makeblobs.py b/data/makeblobs.py
+@@ -35,7 +35,7 @@ class wrapped_dataset(torch.utils.data.Dataset):
+
+-def _makeblobs_output(config, logger, train_dset, test_dset, num_classes, include_noise=False):
++def _makeblobs_output(config, logger, train_dset, test_dset, num_classes, include_noise=False, wstar_test_acc=None):
+     payload = {
+         'num_classes': num_classes,
+         'train_dset': train_dset,
+@@ -62,6 +62,8 @@ def _makeblobs_output(config, logger, train_dset, test_dset, num_classes, includ
+             )
+         )
++    if wstar_test_acc is not None:
++        payload['wstar_test_acc'] = wstar_test_acc
+     return payload
+
+@@ -139,6 +139,22 @@ def MakeBlobs(config, logger):
+     X_test_t  = torch.from_numpy(X_test)
+     y_test_t  = torch.from_numpy(y_test)
+
++    wstar_test_acc = None
++    wstar_file = dcfg.get('wstar_file')
++    if wstar_file is not None:
++        w_star = np.load(wstar_file).astype(np.float32)
++        if standardize:
++            w_eff = std[0] * w_star
++            bias  = -(mean[0] * w_star).sum()
++        else:
++            w_eff = w_star
++            bias  = 0.0
++        z     = X_test @ w_eff + bias
++        preds = (z > 0).astype(np.int64)
++        wstar_test_acc = float((preds == y_test).mean())
++
+     train_dset = wrapped_dataset(X_train_t, y_train_t)
+     test_dset  = wrapped_dataset(X_test_t,  y_test_t)
+
+{{`wstar_file` already acts as the opt-in. It is only ever injected by `write_generated_configs`
+in the slurm script, so any generic/non-binary `MakeBlobs` run simply won't have the key and
+the `if wstar_file is not None:` guard skips all computation. The data loader doesn't have
+access to the diagnostics yaml without extra plumbing, which isn't worth it for one cheap numpy
+matmul. The two-gate design (data config `wstar_file` + diagnostics `wandb_wstar_acc`) is
+sufficient: the computation only runs for binary blobs runs, and logging only happens when the
+diagnostics flag is set.}}
+
+@@ -155,6 +171,7 @@ def MakeBlobs(config, logger):
+         train_dset=train_dset,
+         test_dset=test_dset,
+         num_classes=num_classes,
++        wstar_test_acc=wstar_test_acc,
+     )
+
+diff --git a/methods/method_utils/diagnostics_context.py b/methods/method_utils/diagnostics_context.py
+@@ -18,3 +18,4 @@ class DiagnosticsRunContext:
+     checkpoint_saver: Any = None
+     noisy_indices: Any = None
+     true_labels: Any = None
++    wstar_test_acc: float | None = None
+
+diff --git a/methods/SelectionMethod.py b/methods/SelectionMethod.py
+@@ -120,6 +120,7 @@ class SelectionMethod(object):
+             checkpoint_saver=self.save_checkpoint,
+             noisy_indices=self.data_info.get('noisy_indices'),
+             true_labels=self.data_info.get('true_labels'),
++            wstar_test_acc=self.data_info.get('wstar_test_acc'),
+         )
+
+diff --git a/methods/method_utils/diagnostics.py b/methods/method_utils/diagnostics.py
+@@ -27,6 +27,8 @@ class DiagnosticsLogger:
+         self.wandb_loss_acc = bool(diagnostics_config.get('wandb_loss_acc', False))
+         ...
++        self.wandb_wstar_acc = bool(diagnostics_config.get('wandb_wstar_acc', False))
++        self.wstar_test_acc  = context.wstar_test_acc
+         ...
+         # (end of __init__, after all sub-loggers are constructed)
++        if self.wandb_wstar_acc and self.wstar_test_acc is not None:
++            wandb.summary['wstar_test_acc'] = self.wstar_test_acc
+
+@@ -158,6 +158,8 @@ class DiagnosticsLogger:
+                 log_data['val_loss'] = snapshot_metrics['val_loss']
+                 log_data['val_acc']  = snapshot_metrics['val_acc']
++                if self.wandb_wstar_acc and self.wstar_test_acc is not None:
++                    log_data['wstar_test_acc'] = self.wstar_test_acc
+                 log_data['best_val_acc'] = float(self.best_acc)
+
+diff --git a/configs/diagnostics/weight_matrix_tests.yaml b/configs/diagnostics/weight_matrix_tests.yaml
+@@ -14,6 +14,7 @@ diagnostics:
+   wandb_ntk: false
+   local_spectral_decay: false
+   wandb_weight_matrix_norms: true
++  wandb_wstar_acc: true

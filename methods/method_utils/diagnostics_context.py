@@ -21,3 +21,6 @@ class DiagnosticsRunContext:
     checkpoint_saver: Any = None
     noisy_indices: Any = None
     true_labels: Any = None
+    wstar_test_acc: float | None = None
+    what_test_acc:  float | None = None  # accuracy of perturbed teacher direction w_hat
+    bayes_accuracy: float | None = None
