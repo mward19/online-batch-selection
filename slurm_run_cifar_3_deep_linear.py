@@ -10,6 +10,7 @@ import re
 WANDB_PROJECT = "Matthew—Deep Linear Networks"
 
 USE_SLURM = True
+EXP_BASE = "./exp/"  # change to e.g. "./exp-ablation/" to redirect output
 
 SEEDS = [1, 2, 3]
 DIAGNOSTICS = "configs/diagnostics/snapshots_log_interval.yaml"
@@ -64,6 +65,7 @@ with open(save_dirs_file, "w") as f:
                 "--model", model,
                 "--optim", optim,
                 "--seed", str(seed),
+                "--exp_base", EXP_BASE,
             ],
             text=True,
         ).strip()

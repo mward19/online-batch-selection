@@ -39,8 +39,8 @@ def re_nest_configs(config_dict):
     if 'sweep_config' in config_dict.keys():
         config_dict._items.pop("sweep_config")
 
-def get_save_dir(config, notes=None):
-    save_dir = './exp/'
+def get_save_dir(config, notes=None, exp_base='./exp/'):
+    save_dir = exp_base
     save_dir = os.path.join(save_dir, config['dataset']['name'])
     save_dir = os.path.join(save_dir, config['method'])
     save_dir = save_dir + '_' + config['networks']['params']['m_type']

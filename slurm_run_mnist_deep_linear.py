@@ -10,6 +10,7 @@ import re
 WANDB_PROJECT = "Matthew—Deep Linear Networks (Blobs)"
 
 USE_SLURM = True
+EXP_BASE = "./exp/"  # change to e.g. "./exp-ablation/" to redirect output
 
 # SEEDS = [1, 2, 3]
 SEEDS = [1]
@@ -66,6 +67,7 @@ with open(save_dirs_file, "w") as f:
                 "--model", model,
                 "--optim", optim,
                 "--seed", str(seed),
+                "--exp_base", EXP_BASE,
             ],
             text=True,
         ).strip()

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-def create_model(m_type='linear', input_dim=[1,1,10], num_classes=10, pretrained=False, **kwargs):
+def create_model(m_type='linear', input_dim=[1,1,10], num_classes=10, pretrained=False, *, activation=nn.Identity(), **kwargs):
     input_dim_scalar = math.prod(input_dim)
 
     if 'hidden_dims' in kwargs and ('num_hidden_layers' in kwargs or 'hidden_dim' in kwargs):
@@ -25,20 +25,27 @@ def create_model(m_type='linear', input_dim=[1,1,10], num_classes=10, pretrained
     model = DeepLinear(
         input_dim=input_dim_scalar, 
         hidden_dims=hidden_dims, 
-        num_classes=num_classes
+        num_classes=num_classes,
+        activation=activation
     )
     return model
 
+def create_model_relu(*args, **kwargs):
+    return create_model(*args, activation=nn.ReLU(), **kwargs)
+
 class DeepLinear(nn.Module):
-    def __init__(self, input_dim, hidden_dims, num_classes, flatten_input=True):
+    def __init__(self, input_dim, hidden_dims, num_classes, flatten_input=True, activation=nn.Identity()):
         super().__init__()
 
         all_dims = [input_dim] + hidden_dims + [num_classes]
 
-        self.hidden = nn.Sequential(*[
-            nn.Linear(d1, d2)
-            for d1, d2 in zip(all_dims[:-2], all_dims[1:-1])
-        ])
+        self.hidden = nn.Sequential(*sum(
+            (
+                [nn.Linear(d1, d2), activation] 
+                for d1, d2 in zip(all_dims[:-2], all_dims[1:-1])
+            ),
+            start=[]
+        ))
 
         self.classifier = nn.Linear(all_dims[-2], all_dims[-1])
 
