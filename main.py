@@ -16,23 +16,22 @@ import methods
 
 
 def build_artifact_stem(args, config):
-<<<<<<< HEAD
-    stem_dict = dict(
-        bsel=config['method'],
-        seed=config['seed'],
-        model=config['networks']['type'],
-        opt=os.path.basename(args.optim).split('-')[0] if args.optim is not None else None,
-        bs=config['training_opt']['batch_size'],
-        ratio=config.get('method_opt', {}).get('ratio'),
-        lr=config['training_opt']['optim_params']['lr'],
-        wd=config['training_opt']['optim_params']['weight_decay'],
-        layers=config['networks']['params']['num_hidden_layers'],
-        hidden_dim=config['networks']['params']['hidden_dim']
-    )
-    if args.artifact_suffix:
-        stem_dict.update(json.loads(args.artifact_suffix))
-    return json.dumps(stem_dict).replace(' ', '')
-=======
+    # stem_dict = dict(
+    #     bsel=config['method'],
+    #     seed=config['seed'],
+    #     model=config['networks']['type'],
+    #     opt=os.path.basename(args.optim).split('-')[0] if args.optim is not None else None,
+    #     bs=config['training_opt']['batch_size'],
+    #     ratio=config.get('method_opt', {}).get('ratio'),
+    #     lr=config['training_opt']['optim_params']['lr'],
+    #     wd=config['training_opt']['optim_params']['weight_decay'],
+    #     layers=config['networks']['params']['num_hidden_layers'],
+    #     hidden_dim=config['networks']['params']['hidden_dim']
+    # )
+    # if args.artifact_suffix:
+    #     stem_dict.update(json.loads(args.artifact_suffix))
+    # return json.dumps(stem_dict).replace(' ', '')
+    # TODO: change this behavior
     return json.dumps(
         dict(
             bsel=config['method'],
@@ -46,7 +45,6 @@ def build_artifact_stem(args, config):
             noise_percent=config['dataset'].get('noise_percent', 0.0)
         )
     ).replace(' ', '')
->>>>>>> main
 
 
 def _normalize_path(path):
