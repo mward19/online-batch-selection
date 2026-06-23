@@ -7,6 +7,9 @@ from methods.method_utils.ntk import NTKDiagnostics
 from methods.method_utils.param_grad import ParamGradDiagnostics
 from methods.method_utils.probe import ProbeDiagnostics
 from methods.method_utils.snapshots import SnapshotManager
+from methods.method_utils.weight_matrix import WeightMatrixDiagnostics
+
+from datetime import timedelta
 
 
 class DiagnosticsLogger:
@@ -44,8 +47,13 @@ class DiagnosticsLogger:
         self.local_points_selected = bool(diagnostics_config.get('local_points_selected', False))
         self.local_best_model_checkpoints = bool(diagnostics_config.get('local_best_model_checkpoints', False))
         self.wandb_loss_acc = bool(diagnostics_config.get('wandb_loss_acc', False))
+        self.wandb_wstar_acc = bool(diagnostics_config.get('wandb_wstar_acc', False))
+        self.wstar_test_acc  = context.wstar_test_acc
+        self.what_test_acc   = context.what_test_acc
+        self.bayes_accuracy  = context.bayes_accuracy
         self.wandb_normed_logits = bool(diagnostics_config.get('wandb_normed_logits', False))
         self.wandb_param_norms = bool(diagnostics_config.get('wandb_param_norms', False))
+        self.wandb_weight_matrix_norms = bool(diagnostics_config.get('wandb_weight_matrix_norms', False))
         self.wandb_grad_norms = bool(diagnostics_config.get('wandb_grad_norms', False))
         self.wandb_linear_probe = bool(diagnostics_config.get('wandb_linear_probe', False))
         self.wandb_ntk = bool(diagnostics_config.get('wandb_ntk', False))
@@ -100,12 +108,29 @@ class DiagnosticsLogger:
             config=run_config,
             save_spectrum=local_spectrum,
         )
+        weight_matrix_param_names = diagnostics_config.get('weight_matrix_param_names') or None
+        weight_matrix_last_n_layers = diagnostics_config.get('weight_matrix_last_n_layers')
+        weight_matrix_last_n_layers = int(weight_matrix_last_n_layers) if weight_matrix_last_n_layers is not None else None
+        self.weight_matrix_diagnostics = WeightMatrixDiagnostics(
+            logger=self.logger,
+            context=context,
+            enabled=self.wandb_weight_matrix_norms,
+            param_names=weight_matrix_param_names,
+            last_n_layers=weight_matrix_last_n_layers,
+        )
         self.should_log_probe = self.probe_diagnostics.enabled
         self.should_log_ntk = self.ntk_diagnostics.enabled
         self.snapshots = self.snapshot_manager.snapshots
 
         if self.wandb_ntk and not self.should_log_ntk:
             self.logger.info('Warning: disabling NTK diagnostics because ntk_max_samples or ntk_top_k is non-positive.')
+
+        if self.wandb_wstar_acc and self.wstar_test_acc is not None:
+            wandb.summary['wstar_test_acc'] = self.wstar_test_acc
+        if self.what_test_acc is not None:
+            wandb.summary['what_test_acc'] = self.what_test_acc
+        if self.bayes_accuracy is not None:
+            wandb.summary['bayes_accuracy'] = self.bayes_accuracy
 
     @property
     def best_acc(self):
@@ -233,6 +258,7 @@ class DiagnosticsLogger:
                 log_data['epoch'] = int(epoch)
                 log_data['lr'] = float(lr)
                 log_data['total_time'] = float(total_time)
+                log_data["total_time_str"] = str(timedelta(seconds=int(total_time)))
                 log_data['time_epoch'] = float(time_this_epoch)
 
             if self.wandb_normed_logits:
@@ -247,6 +273,9 @@ class DiagnosticsLogger:
 
         if self.should_log_ntk:
             log_data.update(self.ntk_diagnostics.log_metrics(model, device, total_step=total_step))
+        
+        if self.weight_matrix_diagnostics.enabled:
+            log_data.update(self.weight_matrix_diagnostics.log_metrics(model))
 
         if self.should_log_param_stats:
             log_data.update(self.param_grad_diagnostics.log_metrics(model))

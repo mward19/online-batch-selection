@@ -1,0 +1,15 @@
+method: RhoLoss
+method_opt:
+  ratio: 0.1
+  balance: False
+  ratio_scheduler: constant
+  warmup_epochs: 0
+  uniform_epochs: 0
+
+teacher_model_source: local_pretrained
+teacher_model_path: null
+
+local_pretrained:
+  type: Linear
+  params:
+    m_type: linear

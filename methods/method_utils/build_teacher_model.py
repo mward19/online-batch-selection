@@ -30,8 +30,13 @@ def build_teacher_model(config, logger):
 
     if teacher_model_source == 'local_pretrained':
         logger.info(f'Loading teacher model from {teacher_model_path}')
-        model_type = config['networks']['type']
-        model_args = config['networks']['params'] | config['dataset']
+        lp_config = config.get('local_pretrained', {})
+        if lp_config.get('type'):
+            model_type = lp_config['type']
+            model_args = (lp_config.get('params') or {}) | config['dataset']
+        else:
+            model_type = config['networks']['type']
+            model_args = config['networks']['params'] | config['dataset']
         model = getattr(models, model_type)(**model_args)
         model.load_state_dict(torch.load(teacher_model_path, map_location='cpu'))
         return model

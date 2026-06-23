@@ -10,6 +10,7 @@ __pycache__/
 _CIFAR/
 _MNIST/
 _TINYIMAGENET/
+logs/
 
 # _TINYIMAGENET/
 _CIFAR_N/
@@ -27,12 +28,18 @@ wandb/
 # vscode
 .vscode/
 
+configs/makeblobs/generated/
 results/
 runs/
 selected_points/
 scripts/
 labels/
 snapshots/
+spectral_decay/
+
+# AI
+CLAUDE.md
+
 spectrum/
 spectral_decay/
 ternary/

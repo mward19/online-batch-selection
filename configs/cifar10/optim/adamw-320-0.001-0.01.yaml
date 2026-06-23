@@ -1,5 +1,5 @@
 training_opt:
-  num_epochs: 200
+  num_epochs: 300
   num_data_workers: 4
   batch_size: 320
   test_batch_size: 512

@@ -6,7 +6,7 @@ import torch.nn as nn
 import numpy as np
 import random
 import secrets
-from utils import custom_logger,random_str, get_date, re_nest_configs, get_configs
+from utils import custom_logger,random_str, get_date, re_nest_configs, get_configs, get_save_dir
 import wandb
 import json
 
@@ -16,6 +16,22 @@ import methods
 
 
 def build_artifact_stem(args, config):
+    # stem_dict = dict(
+    #     bsel=config['method'],
+    #     seed=config['seed'],
+    #     model=config['networks']['type'],
+    #     opt=os.path.basename(args.optim).split('-')[0] if args.optim is not None else None,
+    #     bs=config['training_opt']['batch_size'],
+    #     ratio=config.get('method_opt', {}).get('ratio'),
+    #     lr=config['training_opt']['optim_params']['lr'],
+    #     wd=config['training_opt']['optim_params']['weight_decay'],
+    #     layers=config['networks']['params']['num_hidden_layers'],
+    #     hidden_dim=config['networks']['params']['hidden_dim']
+    # )
+    # if args.artifact_suffix:
+    #     stem_dict.update(json.loads(args.artifact_suffix))
+    # return json.dumps(stem_dict).replace(' ', '')
+    # TODO: change this behavior
     return json.dumps(
         dict(
             bsel=config['method'],
@@ -165,6 +181,12 @@ def main():
                         help='Notes for the experiment.')
     parser.add_argument('--wandb_not_upload', action='store_true', 
                         help='Do not upload the result to wandb.')
+    parser.add_argument('--wandb_project', type=str,
+                        default=None, help='Project name for W&B')
+    parser.add_argument('--artifact_suffix', type=str, default=None,
+                        help='JSON-encoded dict of extra fields merged into artifact_stem for snapshot/selected-points file names.')
+    parser.add_argument('--exp_base', type=str, default='./exp/',
+                        help='Base directory for experiment outputs; also used to namespace the snapshots dir.')
 
     args = parser.parse_args()
 
@@ -191,37 +213,13 @@ def main():
     
 
     if args.save_dir is None:
-        args.save_dir = './exp/'
-        # dataset
-        args.save_dir = os.path.join(args.save_dir, config['dataset']['name'])
-        # method
-        args.save_dir = os.path.join(args.save_dir, config['method'])
-        # model
-        args.save_dir = args.save_dir + '_' + config['networks']['params']['m_type']
-        # bs
-        args.save_dir = args.save_dir + '_bs' + str(config['training_opt']['batch_size'])
-        # epochs
-        args.save_dir = args.save_dir + '_ep' + str(config['training_opt']['num_epochs'])
-        # lr
-        args.save_dir = args.save_dir + '_lr' + str(config['training_opt']['optim_params']['lr'])
-        # optimizer
-        args.save_dir = args.save_dir + '_' + config['training_opt']['optimizer']
-        # scheduler
-        args.save_dir = args.save_dir + '_' + config['training_opt']['scheduler']
-        # seed
-        args.save_dir = args.save_dir + '_seed' + str(args.seed)
-        # ratio
-        if 'method_opt' in config:
-            if 'ratio' in config['method_opt']:
-                args.save_dir = args.save_dir + '_r' + str(config['method_opt']['ratio'])
-        # notes
-        if args.notes is not None:
-            args.save_dir = args.save_dir + '_' + args.notes
-    
+        args.save_dir = get_save_dir(config, args.notes, exp_base=args.exp_base)
+
 
     # method/save_dir
     save_dir = args.save_dir
     config['save_dir'] = save_dir
+    config['exp_base'] = args.exp_base
     method = config['method']
 
     if method not in methods.__all__:
@@ -257,11 +255,15 @@ def main():
     logger.info(f'=====> Wandb initialized')
     wandb_init_kwargs = {
         'config': config,
+<<<<<<< HEAD
+        'project': args.wandb_project,
+=======
         'entity': "miller-ml-research",
 <<<<<<< HEAD
         'project': "Noisy_Expiriments",
 =======
         'project': "Appendix Runs",
+>>>>>>> main
 >>>>>>> main
         'dir': save_dir,
     }

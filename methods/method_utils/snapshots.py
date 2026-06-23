@@ -48,7 +48,8 @@ class SnapshotManager:
 
         self.snapshots = []
         self.snapshot_steps = []
-        snapshots_dir = os.path.join(self.context.project_root, 'snapshots', self.context.dataset_name)
+        exp_base_name = os.path.basename(os.path.normpath(self.context.exp_base))
+        snapshots_dir = os.path.join(self.context.project_root, 'snapshots', exp_base_name, self.context.dataset_name)
         os.makedirs(snapshots_dir, exist_ok=True)
         self.snapshots_path = os.path.join(snapshots_dir, f'{self.context.artifact_stem}.p')
 

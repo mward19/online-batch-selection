@@ -11,6 +11,9 @@ diagnostics:
   wandb_grad_norms: true
   wandb_linear_probe: true
   wandb_ntk: true
+  wandb_weight_matrix_norms: true
+  layers: ["linear1"]
+  wandb_histogram_max_points: 200000
   linear_probe_max_iter: 300
   linear_probe_max_samples: 5000
   ntk_max_samples: 1000

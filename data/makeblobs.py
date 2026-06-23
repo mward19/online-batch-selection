@@ -32,7 +32,7 @@ class wrapped_dataset(torch.utils.data.Dataset):
         }
 
 
-def _makeblobs_output(config, logger, train_dset, test_dset, num_classes, include_noise=False):
+def _makeblobs_output(config, logger, train_dset, test_dset, num_classes, include_noise=False, wstar_test_acc=None, what_test_acc=None):
     payload = {
         'num_classes': num_classes,
         'train_dset': train_dset,
@@ -60,6 +60,10 @@ def _makeblobs_output(config, logger, train_dset, test_dset, num_classes, includ
                 seed=config.get('seed'),
             )
         )
+    if wstar_test_acc is not None:
+        payload['wstar_test_acc'] = wstar_test_acc
+    if what_test_acc is not None:
+        payload['what_test_acc'] = what_test_acc
     return payload
 
 
@@ -95,6 +99,19 @@ def MakeBlobs(config, logger):
     n_samples = int(dcfg.get('n_samples', 10_000))
     n_features = int(dcfg.get('n_features', 2))
     centers = dcfg.get('centers', 3)
+    centers_type = dcfg.get('centers_type', None)
+    if centers_type == 'from_file':
+        center_file = dcfg['center_file']
+        centers = np.load(center_file)  # shape (2, n_features)
+        if centers.shape != (2, n_features):
+            raise ValueError(f'center_file has shape {centers.shape}, expected (2, {n_features})')
+        num_classes = 2
+    elif centers_type is not None:
+        raise ValueError(f'Unknown centers_type: {centers_type}')
+    elif isinstance(centers, int):
+        num_classes = centers
+    else:
+        num_classes = len(centers)
     cluster_std = dcfg.get('cluster_std', 1.0)
     center_box = dcfg.get('center_box', [-10.0, 10.0])
     test_size = float(dcfg.get('test_size', 0.2))
@@ -119,6 +136,24 @@ def MakeBlobs(config, logger):
         stratify=y,
     )
 
+    # Evaluate w_star and w_hat classifiers on raw X_test before standardization
+    # so no coordinate transformation is needed (both vectors live in raw feature space).
+    wstar_test_acc = None
+    wstar_file = dcfg.get('wstar_file')
+    if wstar_file is not None:
+        w_star = np.load(wstar_file).astype(np.float32)
+        z = X_test @ w_star
+        preds = (z <= 0).astype(np.int64)  # z>0 → near +w_star → label 0
+        wstar_test_acc = float((preds == y_test).mean())
+
+    what_test_acc = None
+    wnoised_file = dcfg.get('wnoised_file')
+    if wnoised_file is not None:
+        w_hat = np.load(wnoised_file).astype(np.float32)
+        z = X_test @ w_hat
+        preds = (z <= 0).astype(np.int64)  # same sign convention as w_star
+        what_test_acc = float((preds == y_test).mean())
+
     if standardize:
         mean = X_train.mean(axis=0, keepdims=True)
         std = X_train.std(axis=0, keepdims=True)
@@ -140,17 +175,14 @@ def MakeBlobs(config, logger):
         else config['training_opt']['test_batch_size']
     )
 
-    if isinstance(centers, int):
-        num_classes = centers
-    else:
-        num_classes = len(centers)
-
     return _makeblobs_output(
         config=config,
         logger=logger,
         train_dset=train_dset,
         test_dset=test_dset,
         num_classes=num_classes,
+        wstar_test_acc=wstar_test_acc,
+        what_test_acc=what_test_acc,
     )
 
 
@@ -169,6 +201,19 @@ def MakeBlobs_Noise(config, logger):
     n_samples = int(dcfg.get('n_samples', 10_000))
     n_features = int(dcfg.get('n_features', 2))
     centers = dcfg.get('centers', 3)
+    centers_type = dcfg.get('centers_type', None)
+    if centers_type == 'from_file':
+        center_file = dcfg['center_file']
+        centers = np.load(center_file)  # shape (2, n_features)
+        if centers.shape != (2, n_features):
+            raise ValueError(f'center_file has shape {centers.shape}, expected (2, {n_features})')
+        num_classes = 2
+    elif centers_type is not None:
+        raise ValueError(f'Unknown centers_type: {centers_type}')
+    elif isinstance(centers, int):
+        num_classes = centers
+    else:
+        num_classes = len(centers)
     cluster_std = dcfg.get('cluster_std', 1.0)
     center_box = dcfg.get('center_box', [-10.0, 10.0])
     test_size = float(dcfg.get('test_size', 0.2))
@@ -213,11 +258,6 @@ def MakeBlobs_Noise(config, logger):
         if 'test_batch_size' not in config['training_opt']
         else config['training_opt']['test_batch_size']
     )
-
-    if isinstance(centers, int):
-        num_classes = centers
-    else:
-        num_classes = len(centers)
 
     return _makeblobs_output(
         config=config,

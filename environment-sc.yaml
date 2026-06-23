@@ -1,0 +1,65 @@
+# conda/mamba environment intended for use with P100 GPUs on the
+# supercomputer. It takes a while to install (20 minutes?).
+
+# `mamba create -f environment-sc.yml`
+# `mamba activate online-bs-p100`
+
+# Use P100 nodes with the `-C pascal` flag, as in 
+# `salloc -C pascal --time=1:00:00 --ntasks=1 --nodes=1 --gpus=1 --mem=8000M`
+# The `-C pascal` flag restricts the nodes to just those with P100s.
+# (https://rc.byu.edu/wiki/index.php?id=Slurm#node-features)
+
+# `uv` would be great, but doesn't have the capability to handle the old CUDA
+# version and still use a new version of pytorch, as far as I am aware.
+
+# It's probably possible to increment the Python version.
+
+# Matthew Ward
+
+name: online-bs-p100
+
+channels:
+  - conda-forge
+  - nvidia
+  - pytorch
+
+channel_priority: flexible # Allows the solver to choose which channel it thinks is best
+
+dependencies: 
+  - python=3.10
+
+  # nvidia-smi on a P100 node shows that the cuda version is 12.8, so earlier than that should work. Selecting 12.6
+  # Force pytorch to use a CUDA 12.6 GPU enabled build (to make it possible to create this on a CPU-only login node)
+  - torchvision=*=*cuda126*
+  - torchaudio=*=*cuda126*
+  - pytorch=*=*cuda126* 
+
+  - numpy
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+  - cvxpy
+
+  - ipykernel
+  - ipywidgets
+
+  - pillow
+  - pyyaml
+  - requests
+  - tqdm
+  - regex
+  - imageio
+  - imageio-ffmpeg
+  - wcwidth
+
+  - pip
+  - pip:
+      - git+https://github.com/openai/CLIP.git
+      - ema-pytorch
+      - ftfy
+      - python-ternary
+      - timm
+      - transformers
+      - umap-learn
+      - wandb

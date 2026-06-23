@@ -119,7 +119,7 @@ class KFCALLAWrapper(nn.Module):
 class CLIPZeroShotClassifier(nn.Module):
     def __init__(self, classnames, template, dataset, arch, tau):
         super(CLIPZeroShotClassifier, self).__init__()
-        clip_model, preprocess = clip.load(arch, jit=False)
+        clip_model, preprocess = clip.load(arch, download_root='./models/teacher', jit=False)
         clip_model.eval()
         self.clip_model = clip_model
         clip_weights = clip_classifier(classnames, template, clip_model)

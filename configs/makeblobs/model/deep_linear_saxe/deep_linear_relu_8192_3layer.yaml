@@ -1,0 +1,6 @@
+networks:
+  type: DeepLinearReLU
+  params:
+    m_type: deeplinearrelu
+    hidden_dim: 8192
+    num_hidden_layers: 3
