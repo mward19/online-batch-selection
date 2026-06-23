@@ -1,4 +1,0 @@
-networks:
-  type: Small_cnn
-  params: 
-    m_type: 'Small_cnn'

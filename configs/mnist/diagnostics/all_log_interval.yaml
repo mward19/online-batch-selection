@@ -6,23 +6,25 @@ diagnostics:
   local_points_selected: true
   local_best_model_checkpoints: true
   wandb_loss_acc: true
+  wand_progress: true
   wandb_normed_logits: true
   wandb_param_norms: true
   wandb_grad_norms: true
   wandb_linear_probe: true
   wandb_ntk: true
-  wandb_weight_matrix_norms: true
-  layers: ["linear1"]
-  wandb_histogram_max_points: 200000
   linear_probe_max_iter: 300
-  ntk_max_samples: 1000
-  ntk_top_k: 10
-  local_spectral_decay: true
+  linear_probe_max_samples: -1 # use all samples
+  ntk_max_samples: 500
+  ntk_top_k: 20
+  # NTK variants: full, trace, pseudo, proj-trace, proj-pseudo, conj-kernel
+  ntk_variant: trace
+  ntk_eigenvalue_concentration_checkpoints: [20, 40, 80]
+  local_spectrum: true
   # Optional teacher kernel reference for NTK diagnostics.
   ntk_teacher_model:
     source: local_pretrained
-    path: /home/lgreen/projects/Online_BS/models/teacher/teacher_generating.pth
+    path: /home/lgreen/projects/Online_BS/models/teacher/MNIST.tar
     local_pretrained:
-      type: TwoLayer
-      params:
-        m_type: 'twolayerbinary'
+      type: LeNet
+      params: 
+        m_type: 'lenet'

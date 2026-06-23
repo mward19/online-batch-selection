@@ -12,6 +12,9 @@ from .cifar import (
 from .mnist import (
     MNIST,
     MNIST_Noise,
+    MNIST10,
+    MNIST90,
+    MNIST90_Noise,
     FashionMNIST,
     FashionMNIST_Noise,
 )

@@ -31,7 +31,6 @@ wandb/
 configs/makeblobs/generated/
 results/
 runs/
-models/teacher
 selected_points/
 scripts/
 labels/
@@ -40,3 +39,16 @@ spectral_decay/
 
 # AI
 CLAUDE.md
+
+spectrum/
+spectral_decay/
+ternary/
+ntk_indices/
+exports/
+thesis_plots/
+run_teacher_generated.sh
+run_mnist.sh
+run_cifar10.sh
+run_cifar100.sh
+run_all.sh
+plot_all.sh

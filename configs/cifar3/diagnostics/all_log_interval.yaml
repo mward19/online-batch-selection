@@ -1,0 +1,32 @@
+diagnostics:
+  log_interval: logarithmic
+  save_init: 5
+  save_freq: 4
+  local_snapshots: true
+  local_points_selected: true
+  local_best_model_checkpoints: true
+  wandb_loss_acc: true
+  wandb_normed_logits: true
+  wandb_param_norms: true
+  wandb_grad_norms: true
+  wandb_linear_probe: true
+  wandb_ntk: true
+  wandb_weight_matrix_norms: true
+  layers: ["linear1"]
+  wandb_histogram_max_points: 200000
+  linear_probe_max_iter: 300
+  linear_probe_max_samples: 5000
+  ntk_max_samples: 1000
+  ntk_top_k: 10
+  # NTK variants: full, trace, pseudo, proj-trace, proj-pseudo, conj-kernel
+  ntk_variant: pntk
+  ntk_eigenvalue_concentration_checkpoints: [20, 40, 80]
+  local_spectrum: true
+  # Optional teacher kernel reference for NTK diagnostics.
+  ntk_teacher_model:
+    source: local_pretrained
+    path: /home/lgreen/projects/Online_BS/models/teacher/teacher_generating.pth
+    local_pretrained:
+      type: TwoLayer
+      params:
+        m_type: 'twolayerbinary'

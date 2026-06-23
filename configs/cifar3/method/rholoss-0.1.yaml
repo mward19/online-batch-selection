@@ -18,5 +18,5 @@ teacher_model_source: clip # Supported options: "local_pretrained", "clip", "tim
 
 # If Clip is selected, specify the model architecture here
 clip:
-  clip_architecture: 'RN50'
+  clip_architecture: 'ViT-B/16'
   tau: 4

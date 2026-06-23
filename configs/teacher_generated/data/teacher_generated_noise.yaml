@@ -2,7 +2,7 @@ dataset:
   name: Teacher_Generated_Noise
   # If this path does not exist, must generate new data
   # To generate new data, delete the teacher model stored at this path or specify a new path
-  generating_teacher_model_path: /home/lgreen/projects/Online_BS/models/teacher/teacher_generating.pth
+  generating_teacher_model_path: models/teacher/teacher_generating.pth
   noisy_labels_path: labels/Teacher_Generated_noise.p
   noise_percent: 0.1
   networks:
@@ -14,5 +14,6 @@ dataset:
   test_size: 0.2
   num_classes: 2
   input_dim: [1,16]
+  hidden_dim: 15
   output_dim: 1
   tau: 3

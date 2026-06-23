@@ -1,4 +1,0 @@
-networks:
-  type: Simple_fc
-  params: 
-    m_type: 'simple_fc'

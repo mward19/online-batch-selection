@@ -53,12 +53,15 @@ class SelectionMethod(object):
         # create optimizer
         self.optimizer = create_optimizer(self.model, config)
         self.scheduler = create_scheduler(self.optimizer, config)
+        self.gradient_clipping = config["method_opt"].get("gradient_clipping", False)
+        self.max_norm = config["method_opt"].get("max_norm", None)
+        
         # resume
         config['training_opt']['resume'] = config['training_opt']['resume'] if 'resume' in config['training_opt'] else None
         if config['training_opt']['resume'] is not None:
             self.resume(config['training_opt']['resume'])
         
-        # create EMA model
+        # create EMA model (Bayesian paper uses it, though it is not mentioned anywhere)
         # self.ema_net = EMA(
         #     self.model,
         #     beta=0.99,
@@ -91,15 +94,8 @@ class SelectionMethod(object):
 
         # Diagnostics
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
         diagnostics_config = {
-            'layers': self.training_opt.get('diagnostics_layers', []),
-            'wandb_histogram_max_points': self.training_opt.get('wandb_histogram_max_points', 200000),
-            'linear_probe_max_iter': self.training_opt.get('diagnostics_lr_max_iter', 300),
-            'wandb_ntk': self.training_opt.get('diagnostics_ntk_enabled', False),
-            'ntk_max_samples': self.training_opt.get('diagnostics_ntk_max_samples', 1000),
-            'ntk_top_k': self.training_opt.get('diagnostics_ntk_top_k', 10),
-            'local_spectral_decay': self.training_opt.get('local_spectral_decay', False),
-            'teacher_model_config': self.config,
             **config.get('diagnostics', {}),
         }
         diagnostics_context = DiagnosticsRunContext(
@@ -130,7 +126,9 @@ class SelectionMethod(object):
             num_classes=self.num_classes,
             criterion=self.criterion,
             diagnostics_config=diagnostics_config,
+            run_config=self.config,
             context=diagnostics_context,
+            model=self.model.module if hasattr(self.model, 'module') else self.model,
         )
         self.snapshots = self.diagnostics_logger.snapshots
 
@@ -188,10 +186,10 @@ class SelectionMethod(object):
         filename = os.path.join(self.config['save_dir'],filename)
         best_filename = os.path.join(self.config['save_dir'],'model_best.pth.tar')
         torch.save(state, filename)
-        # self.logger.info(f'Save checkpoint to {filename}')
+        self.logger.info(f'Save checkpoint to {filename}')
         if is_best:
             shutil.copyfile(filename, best_filename)
-            # self.logger.info(f'Save best checkpoint to {best_filename}')
+            self.logger.info(f'Save best checkpoint to {best_filename}')
 
     def run(self):
         self.before_run()
@@ -225,7 +223,6 @@ class SelectionMethod(object):
         return
 
     def after_epoch(self, epoch):
-        self.save_model(epoch)
         self.diagnostics_logger.log_epoch_end_selection_stats(
             epoch=epoch,
             total_step=self.total_step,
@@ -287,14 +284,8 @@ class SelectionMethod(object):
         self.best_epoch = diagnostics_state['best_epoch']
         self.is_best = diagnostics_state['is_best']
 
-    def log_step_param_grad_stats(self, epoch):
-        model = self.model.module if hasattr(self.model, 'module') else self.model
-        self.diagnostics_logger.log_step_param_grad_stats(
-            model=model,
-            total_step=self.total_step + 1,
-            epoch=epoch,
-        )
-
+        if diagnostics_state.get('logged', False):
+            self.save_model(epoch)
 
     def train(self, epoch):
         # train for one epoch and record time taken
@@ -348,7 +339,8 @@ class SelectionMethod(object):
             )
             self.optimizer.zero_grad()
             loss.backward()
-            self.log_step_param_grad_stats(epoch)
+            if self.gradient_clipping:
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.max_norm)
             self.optimizer.step()
             self.after_batch(
                 i,

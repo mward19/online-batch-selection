@@ -1,0 +1,17 @@
+method: GradNormIS
+method_opt:
+  ratio: 0.1
+  balance: False
+  ratio_scheduler: constant
+  warmup_epochs: 0
+
+  sample_with_replacement: True
+  
+  uniform_fallback: True
+  uniform_fallback_opt:
+    a_tau: 0.5
+
+  gradient_clipping: True
+  max_norm: 1.0
+
+  probability_threshold: 0.00001

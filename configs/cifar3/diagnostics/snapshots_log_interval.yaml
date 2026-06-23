@@ -11,12 +11,15 @@ diagnostics:
   wandb_grad_norms: false
   wandb_linear_probe: false
   wandb_ntk: false
-  local_spectral_decay: false
+  local_spectrum: false
   # layers: []
-  # wandb_histogram_max_points: 200000
   # linear_probe_max_iter: 300
+  # linear_probe_max_samples: 5000
   # ntk_max_samples: 1000
   # ntk_top_k: 10
+  # NTK variants: full, trace, pseudo, proj-trace, proj-pseudo, conj-kernel
+  # ntk_variant: pntk
+  # ntk_eigenvalue_concentration_checkpoints: [20, 40, 80]
   # ntk_teacher_model:
   #   source: local_pretrained
   #   path: /absolute/path/to/teacher_model.pth

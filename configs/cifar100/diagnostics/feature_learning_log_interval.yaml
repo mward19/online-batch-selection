@@ -1,0 +1,28 @@
+diagnostics:
+  log_interval: logarithmic
+  save_init: 5
+  save_freq: 4
+  local_snapshots: false
+  local_points_selected: false
+  local_best_model_checkpoints: false
+  wandb_loss_acc: false
+  wand_progress: false
+  wandb_normed_logits: false
+  wandb_param_norms: true
+  wandb_grad_norms: true
+  wandb_linear_probe: true
+  wandb_ntk: true
+  linear_probe_max_iter: 300
+  linear_probe_max_samples: -1 # use all samples
+  ntk_max_samples: 1000
+  ntk_top_k: 20
+  # NTK variants: full, trace, pseudo, proj-trace, proj-pseudo, conj-kernel
+  ntk_variant: conj_kernel
+  ntk_eigenvalue_concentration_checkpoints: [20, 40, 80]
+  local_spectrum: true
+  # Optional teacher kernel reference for NTK diagnostics.
+  ntk_teacher_model:
+    source: clip
+    clip:
+      clip_architecture: 'ViT-B/16'
+      tau: 12

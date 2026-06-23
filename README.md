@@ -28,9 +28,17 @@ python val_folder.py
 
 ## Running
 ```bash
-CUDA_VISIBLE_DEVICES=0 uv run main.py --cfg cfg/cifar10.yaml --wandb_not_upload
+CUDA_VISIBLE_DEVICES=0 uv run main.py \
+  --method configs/cifar10/method/uniform-0.1.yaml \
+  --data configs/cifar10/data/cifar10.yaml \
+  --model configs/cifar10/model/resnet18.yaml \
+  --optim configs/cifar10/optim/adamw-320-0.001-0.01.yaml \
+  --diagnostics configs/cifar10/diagnostics/all_log_interval.yaml \
+  --wandb_not_upload
 ```
-The `--wandb_not_upload` is optional and is used to keep wandb log files locally without uploading them to the wandb cloud. CUDA_VISIBLE_DEVICES specifies which GPU device to use. Multiple GPU devices are supported (i.e. CUDA_VISIBLE_DEVICES="0,2").
+The `--wandb_not_upload` flag is optional and keeps wandb logs local instead of uploading them.
+
+`CUDA_VISIBLE_DEVICES` selects visible GPU devices (for example `CUDA_VISIBLE_DEVICES=0` or `CUDA_VISIBLE_DEVICES="0,2"`).
 
 ## Save Labels Once
 
@@ -69,19 +77,20 @@ The repository is organized as follows:
 
 ### Core Components
 
-- **`methods/selectionmethod.py`** - Parent class containing the main training loop and core batch selection logic. All selection methods inherit from this base class. All selection methods are implemented by overwriting the `self.beforebatch()` method.
+- **`methods/SelectionMethod.py`** - Parent class containing the main training loop and core batch selection logic. All selection methods inherit from this base class and implement `before_batch` behavior.
 
-- **`methods/`** - Implementation of various batch selection methods. Each method extends the base `SelectionMethod` class. The list of methods include Full, Uniform, DivBS, RhoLoss, Bayesian, MaxLoss, GradNorm, GradNormIS.
+- **`methods/`** - Implementations of batch selection methods. Current methods include Full, Uniform, DivBS, RhoLoss, Bayesian, TrainLoss, GradNorm, GradNormIS, and Optk.
 
-- **`cfg/`** – Configuration files for different datasets and experiments (e.g., `cifar10.yaml`).  
-  You can specify which batch selection methods to run by listing them in the config file, for example:
+- **`methods/method_utils/`** - Shared training utilities (diagnostics, NTK logging, optimizer/scheduler helpers, probes, snapshots).
+
+- **`configs/`** - Configuration tree grouped by dataset (`cifar10`, `cifar100`, `mnist`, etc.) with separate `data`, `method`, `model`, `optim`, and `diagnostics` YAMLs.
+
+  Example method config snippet:
 
   ```yaml
-  methods:
-    - RhoLoss
-    - DivBS
-    - Bayesian
-    - Full
+  method: Uniform
+  method_opt:
+    ratio: 0.1
   ```
 
   > **Note:** `RhoLoss` and `Bayesian` require additional hyperparameters.
@@ -96,13 +105,16 @@ The repository is organized as follows:
 ### Experiments
 
 - **`exp/`** - Experiment results and logs (git-ignored).
+- **`exports/`** - Exported analysis artifacts for completed runs.
+- **`results/`** - Aggregated outputs used by plotting/post-processing scripts.
 - **`wandb/`** - Weights & Biases logging directory (git-ignored).
 
 ### Key Files to Review
 
-1. Start with `selectionmethod.py` to understand the training loop architecture
+1. Start with `methods/SelectionMethod.py` to understand the training loop architecture
 2. Explore `methods/` to see specific batch selection implementations
-3. Check `cfg/` for experiment configuration options
+3. Check `configs/` for experiment configuration options
+4. Review `methods/method_utils/diagnostics.py` and `methods/method_utils/ntk.py` for diagnostics/NTK behavior
 
 ## Development
 
@@ -113,3 +125,32 @@ To add a new dependency to the project, run `uv add <package-name>`. This will i
 To remove a dependency, run `uv remove <package-name>`. This will perform the reverse of `uv add` (including updating the `pyproject.toml` and `uv.lock` files).
 
 See [uv's documentation](https://docs.astral.sh/uv/guides/projects/#managing-dependencies) for more details.
+
+## Optional: Enable TRAK / TRAKer for Projection NTK Diagnostics
+
+Projection NTK variants (`proj-pseudo`, `proj-trace`) require `TRAKer` from `trak`, which may not be present in the default project dependency set.
+
+Install it in your current `uv` environment:
+
+```bash
+uv pip install traker
+```
+
+If you specifically need the PNNL projection NTK implementation, install it from source:
+
+```bash
+uv pip install "git+https://github.com/pnnl/projection_ntk.git"
+```
+
+Quick verification:
+
+```bash
+uv run python -c "from trak import TRAKer; print('TRAKer import OK')"
+```
+
+## TODO
+
+- [ ] Fix multiple GPU parallelization.
+- [ ] Fix saving/loading training state so runs can be resumed reliably (including diagnostics state in `methods/method_utils/diagnostics.py`).
+- [ ] Fix run naming to avoid output overwrites.
+- [ ] Merge in Connor's code.

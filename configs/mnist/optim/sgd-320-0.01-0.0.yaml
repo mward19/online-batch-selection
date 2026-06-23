@@ -1,0 +1,14 @@
+training_opt:
+  num_epochs: 100
+  num_data_workers: 4
+  batch_size: 320
+  test_batch_size: 512
+  optimizer: SGD
+  optim_params:
+    lr: 0.01
+    weight_decay: 0.0
+  scheduler_params: {}
+  scheduler: 'constant'
+
+  loss_type: CrossEntropy
+  loss_params: {}

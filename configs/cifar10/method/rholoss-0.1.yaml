@@ -7,16 +7,16 @@ method_opt:
   uniform_epochs: 0
 
 teacher_model_source: clip # Supported options: "local_pretrained", "clip", "timm"
-teacher_model_path: /home/lgreen/projects/Online_BS/models/teacher/MakeBlobs.tar
+# teacher_model_path: /home/lgreen/projects/Online_BS/models/teacher/MakeBlobs.tar
 # teacher_model_path: /home/phancock/Online-Batch-Selection/exp/cifar10_small-cnn_30-epoch.tar
 
 # If local_pretrained is selected, specify the model architecture here
-local_pretrained:
-  type: Small_cnn
-  params: 
-    m_type: 'Small_cnn'
+# local_pretrained:
+#   type: Small_cnn
+#   params: 
+#     m_type: 'Small_cnn'
 
 # If Clip is selected, specify the model architecture here
 clip:
-  clip_architecture: 'RN50'
+  clip_architecture: 'ViT-B/16'
   tau: 4
