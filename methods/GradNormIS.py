@@ -131,7 +131,7 @@ class GradNormIS(SelectionMethod):
             # Apply a probability threshold for stability
             probabilities = self.normalize_and_threshold(grad_norm, b) 
             minibatch_indices = torch.multinomial(probabilities, number_to_select, replacement=self.replacement)
-            weights = (B * probabilities[minibatch_indices])**-1
+            weights = (number_to_select * B * probabilities[minibatch_indices])**-1
         else:
             minibatch_indices = torch.randint(B, size=(number_to_select,))
             weights = None # Uniform weighting

@@ -1,4 +1,5 @@
 from torchvision import datasets, transforms
+import os
 import torch
 import numpy as np
 import random
@@ -49,13 +50,27 @@ fashionmnist_templates = [
 class wrapped_dataset(torch.utils.data.Dataset):
     def __init__(self, dataset):
         self.dataset = dataset
-        self.targets = dataset.targets
+        # do not cache targets here; access dataset.targets at call-time to reflect updates
     def __len__(self):
         return len(self.dataset)
     def __getitem__(self, index):
+        sample = self.dataset[index]
+        inp = sample[0]
+        # Prefer explicit targets attribute (works for Subset where we set subset.targets),
+        # otherwise fall back to the label returned by the underlying dataset.__getitem__.
+        if hasattr(self.dataset, 'targets'):
+            tgt = self.dataset.targets[index]
+        else:
+            tgt = sample[1]
+        # coerce tensor->int for consistency
+        if isinstance(tgt, torch.Tensor):
+            try:
+                tgt = int(tgt.item())
+            except Exception:
+                tgt = int(tgt)
         return {
-            'input': self.dataset[index][0],
-            'target': self.dataset[index][1],
+            'input': inp,
+            'target': tgt,
             'index': index
         }
 
@@ -177,6 +192,102 @@ def MNIST_Noise(config, logger):
         templates=mnist_templates,
         include_noise=True,
     )
+
+
+def MNIST10(config, logger):
+    payload = MNIST(config, logger)
+    if 'subset_idx_path' not in config['dataset']:
+        raise ValueError('config["dataset"]["subset_idx_path"] must be set to .npy file of 10% indices')
+    idx_file = config['dataset']['subset_idx_path']
+    indices_10 = np.load(idx_file)
+    indices_10 = np.array(indices_10, dtype=np.int64)
+
+    orig_wrapped = payload['train_dset']
+    orig_dataset = orig_wrapped.dataset
+    # create subset for the specified 10%
+    subset = torch.utils.data.Subset(orig_dataset, indices_10.tolist())
+    try:
+        subset.targets = torch.tensor(np.array(orig_dataset.targets)[indices_10], dtype=torch.long)
+    except Exception:
+        subset.targets = None
+
+    payload['train_dset'] = wrapped_dataset(subset)
+    payload['num_train_samples'] = len(subset)
+    return payload
+
+
+def MNIST90(config, logger):
+    payload = MNIST(config, logger)
+    if 'subset_idx_path' not in config['dataset']:
+        raise ValueError('config["dataset"]["subset_idx_path"] must be set to .npy file of 10% indices')
+    idx_file = config['dataset']['subset_idx_path']
+    indices_10 = np.load(idx_file)
+    indices_10 = np.array(indices_10, dtype=np.int64)
+
+    orig_wrapped = payload['train_dset']
+    orig_dataset = orig_wrapped.dataset
+    all_idx = np.arange(len(orig_dataset))
+    indices_90 = np.setdiff1d(all_idx, indices_10)
+
+    subset = torch.utils.data.Subset(orig_dataset, indices_90.tolist())
+    try:
+        subset.targets = torch.tensor(np.array(orig_dataset.targets)[indices_90], dtype=torch.long)
+    except Exception:
+        subset.targets = None
+
+    payload['train_dset'] = wrapped_dataset(subset)
+    payload['num_train_samples'] = len(subset)
+    return payload
+
+
+def MNIST90_Noise(config, logger):
+    # Build base MNIST payload and create 90% subset first (mirror MNIST_Noise flow)
+    payload = MNIST(config, logger)
+    if 'subset_idx_path' not in config['dataset']:
+        raise ValueError('config["dataset"]["subset_idx_path"] must be set to .npy file of 10% indices')
+    idx_file = config['dataset']['subset_idx_path']
+    indices_10 = np.load(idx_file)
+    indices_10 = np.array(indices_10, dtype=np.int64)
+
+    orig_wrapped = payload['train_dset']
+    orig_dataset = orig_wrapped.dataset
+    all_idx = np.arange(len(orig_dataset))
+    indices_90 = np.setdiff1d(all_idx, indices_10)
+
+    subset = torch.utils.data.Subset(orig_dataset, indices_90.tolist())
+    try:
+        subset.targets = torch.tensor(np.array(orig_dataset.targets)[indices_90], dtype=torch.long)
+    except Exception:
+        subset.targets = None
+
+    # apply noise to the subset (after selection), mirroring MNIST_Noise's include_noise behavior
+    # ensure existing noisy-label cache for a different dataset shape is removed
+    labels_path = config['dataset'].get('noisy_labels_path')
+    if labels_path and os.path.isfile(labels_path):
+        try:
+            # attempt to remove stale cached labels so we regenerate for the subset
+            os.remove(labels_path)
+            logger.info(f'Removed stale noisy labels file at {labels_path} to regenerate for subset')
+        except Exception:
+            logger.warning(f'Failed to remove stale noisy labels at {labels_path}; generation may error')
+
+    noise_meta = apply_or_generate_label_noise(
+        dataset=subset,
+        num_classes=10,
+        dataset_config=config['dataset'],
+        logger=logger,
+        dataset_name='MNIST90_Noise',
+        seed=config.get('seed'),
+    )
+
+    payload['train_dset'] = wrapped_dataset(subset)
+    payload['num_train_samples'] = len(subset)
+
+    # apply_or_generate_label_noise returns true_labels and noisy_indices (as tensors)
+    if isinstance(noise_meta, dict):
+        payload.update(noise_meta)
+
+    return payload
 
 def FashionMNIST(config, logger):
     im_size = (28, 28) if 'im_size' not in config['dataset'] else config['dataset']['im_size']

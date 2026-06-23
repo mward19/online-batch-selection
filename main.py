@@ -127,7 +127,8 @@ def init_seeds(seed):
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    if torch.cuda.device_count() > 1:
+        torch.cuda.manual_seed_all(seed) 
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     
@@ -257,7 +258,11 @@ def main():
     wandb_init_kwargs = {
         'config': config,
         'entity': "miller-ml-research",
+<<<<<<< HEAD
         'project': "Noisy_Expiriments",
+=======
+        'project': "Appendix Runs",
+>>>>>>> main
         'dir': save_dir,
     }
     if resume_state is not None:

@@ -1,16 +1,15 @@
 #!/bin/bash
 
-# Usage: ./run.sh
 
-SEEDS=(2 3 4 5)
-DIAGNOSTICS="configs/diagnostics/snapshots_log_interval.yaml"
+SEEDS=(1 2 3 4 5)
 
 CONFIG_DIR="configs/cifar10"
 
+DIAGNOSTICS="$CONFIG_DIR/diagnostics/all_log_interval.yaml"
 METHODS=("$CONFIG_DIR/method/"*)
 MODELS=("$CONFIG_DIR/model/resnet18.yaml")
 OPTIMS=("$CONFIG_DIR/optim/adamw-320-0.001-0.01.yaml")
-DATAS=("$CONFIG_DIR/data/cifar10_noise.yaml")
+DATAS=("$CONFIG_DIR/data/cifar10.yaml")
 
 for SEED in "${SEEDS[@]}"; do
   for data in "${DATAS[@]}"; do

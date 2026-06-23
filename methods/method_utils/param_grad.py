@@ -1,22 +1,16 @@
 import torch
-import wandb
 
 
 class ParamGradDiagnostics:
-    def __init__(self, wandb_param_norms, wandb_grad_norms, histogram_max_points):
+    def __init__(self, wandb_param_norms, wandb_grad_norms, logger=None):
         self.wandb_param_norms = bool(wandb_param_norms)
         self.wandb_grad_norms = bool(wandb_grad_norms)
-        self.histogram_max_points = int(histogram_max_points)
         self.enabled = self.wandb_param_norms or self.wandb_grad_norms
-
-    def _sample_for_histogram(self, tensor):
-        flat = tensor.detach().float().reshape(-1).cpu()
-        if flat.numel() <= self.histogram_max_points:
-            return flat
-        sample_idx = torch.randperm(flat.numel())[:self.histogram_max_points]
-        return flat[sample_idx]
+        self.logger = logger
+        # Kept for backward compatibility with existing constructor calls.
 
     def log_metrics(self, model):
+        """Gets parameters and gradients with respect to parameters in chunks, then logs L2 norms"""
         if not self.enabled:
             return {}
 
@@ -39,16 +33,10 @@ class ParamGradDiagnostics:
 
         if self.wandb_param_norms and param_chunks:
             flat_params = torch.cat(param_chunks, dim=0)
-            log_data['diagnostics/parameter_norm_l2_global'] = torch.norm(flat_params, p=2).item()
-            log_data['diagnostics/histograms/parameters'] = wandb.Histogram(
-                self._sample_for_histogram(flat_params).numpy()
-            )
+            log_data['diagnostics/parameter_norm_l2'] = torch.norm(flat_params, p=2).item()
 
         if self.wandb_grad_norms and grad_chunks:
             flat_grads = torch.cat(grad_chunks, dim=0)
-            log_data['diagnostics/gradient_norm_l2_global'] = torch.norm(flat_grads, p=2).item()
-            log_data['diagnostics/histograms/gradients'] = wandb.Histogram(
-                self._sample_for_histogram(flat_grads).numpy()
-            )
+            log_data['diagnostics/gradient_norm_l2_minibatch'] = torch.norm(flat_grads, p=2).item()
 
         return log_data

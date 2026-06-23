@@ -1,0 +1,15 @@
+diagnostics:
+  log_interval: logarithmic
+  save_init: 5
+  save_freq: 4
+  local_snapshots: true
+  local_points_selected: true
+  local_best_model_checkpoints: true
+  wandb_loss_acc: true
+  wand_progress: true
+  wandb_normed_logits: false
+  wandb_param_norms: false
+  wandb_grad_norms: false
+  wandb_linear_probe: false
+  wandb_ntk: false
+  local_spectrum: false

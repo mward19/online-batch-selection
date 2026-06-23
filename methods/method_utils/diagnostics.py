@@ -1,5 +1,6 @@
 import torch
 import wandb
+import numpy as np
 
 from methods.method_utils.diagnostics_context import DiagnosticsRunContext
 from methods.method_utils.ntk import NTKDiagnostics
@@ -15,13 +16,30 @@ class DiagnosticsLogger:
         num_classes,
         criterion,
         diagnostics_config,
+        run_config,
         context: DiagnosticsRunContext,
+        model=None,
     ):
         self.logger = logger
         self.num_classes = num_classes
         self.criterion = criterion
 
         diagnostics_config = diagnostics_config or {}
+        self.total_batches = int(context.total_batches)
+        self.num_epochs = context.num_epochs
+        self.num_steps = context.num_steps
+        self.log_interval = diagnostics_config.get('log_interval', 'logarithmic')
+        self.save_init = int(diagnostics_config.get('save_init', 5))
+        self.save_freq = int(diagnostics_config.get('save_freq', 4))
+        if self.log_interval not in {'logarithmic', 'per_epoch'}:
+            self.logger.info(
+                f"Warning: unknown diagnostics log_interval '{self.log_interval}'. Falling back to 'logarithmic'."
+            )
+            self.log_interval = 'logarithmic'
+        self.last_batch_idx = self.total_batches - 1
+        self._logged_steps = set()
+        self._logarithmic_steps = self._build_logarithmic_steps()
+
         self.local_snapshots = bool(diagnostics_config.get('local_snapshots', False))
         self.local_points_selected = bool(diagnostics_config.get('local_points_selected', False))
         self.local_best_model_checkpoints = bool(diagnostics_config.get('local_best_model_checkpoints', False))
@@ -31,18 +49,20 @@ class DiagnosticsLogger:
         self.wandb_grad_norms = bool(diagnostics_config.get('wandb_grad_norms', False))
         self.wandb_linear_probe = bool(diagnostics_config.get('wandb_linear_probe', False))
         self.wandb_ntk = bool(diagnostics_config.get('wandb_ntk', False))
-        self.histogram_max_points = int(diagnostics_config.get('wandb_histogram_max_points', 200000))
         self.lr_max_iter = int(diagnostics_config.get('linear_probe_max_iter', 300))
-        self.layer_names = list(diagnostics_config.get('layers', []))
-        ntk_max_samples = diagnostics_config.get('ntk_max_samples')
-        ntk_max_samples = 1000 if ntk_max_samples is None else int(ntk_max_samples)
+        self.lr_max_samples = int(diagnostics_config.get('linear_probe_max_samples', -1))
+        ntk_max_samples = int(diagnostics_config.get('ntk_max_samples', 1000))
         ntk_top_k = int(diagnostics_config.get('ntk_top_k', 10))
-        local_spectral_decay = bool(diagnostics_config.get('local_spectral_decay', False))
-        teacher_model_config = diagnostics_config.get('teacher_model_config')
+        ntk_variant = str(diagnostics_config.get('ntk_variant', diagnostics_config.get('ntk_kernel_type', 'pntk')))
+        ntk_eigenvalue_concentration_checkpoints = diagnostics_config.get(
+            'ntk_eigenvalue_concentration_checkpoints',
+            [20, 40, 80],
+        )
+        local_spectrum = bool(diagnostics_config.get('local_spectrum', False))
         self.param_grad_diagnostics = ParamGradDiagnostics(
             wandb_param_norms=self.wandb_param_norms,
             wandb_grad_norms=self.wandb_grad_norms,
-            histogram_max_points=self.histogram_max_points,
+            logger=self.logger,
         )
         self.should_log_param_stats = self.param_grad_diagnostics.enabled
         self.should_build_snapshot = (
@@ -54,9 +74,6 @@ class DiagnosticsLogger:
         self.snapshot_manager = SnapshotManager(
             logger=self.logger,
             context=context,
-            log_interval=diagnostics_config.get('log_interval', 'logarithmic'),
-            save_init=diagnostics_config.get('save_init', 5),
-            save_freq=diagnostics_config.get('save_freq', 4),
             should_track_points=self.local_points_selected,
             should_save_snapshots=self.local_snapshots,
             should_save_best_checkpoint=self.local_best_model_checkpoints,
@@ -67,8 +84,9 @@ class DiagnosticsLogger:
         self.probe_diagnostics = ProbeDiagnostics(
             logger=self.logger,
             context=context,
-            layer_names=self.layer_names,
             lr_max_iter=self.lr_max_iter,
+            lr_max_samples=self.lr_max_samples,
+            enabled=self.wandb_linear_probe,
         )
         self.ntk_diagnostics = NTKDiagnostics(
             logger=self.logger,
@@ -76,9 +94,11 @@ class DiagnosticsLogger:
             num_classes=self.num_classes,
             ntk_max_samples=ntk_max_samples,
             ntk_top_k=ntk_top_k,
-            enabled=self.wandb_ntk and ntk_max_samples > 0 and ntk_top_k > 0,
-            teacher_model_config=teacher_model_config,
-            save_spectral_decay=local_spectral_decay,
+            ntk_variant=ntk_variant,
+            ntk_eigenvalue_concentration_checkpoints=ntk_eigenvalue_concentration_checkpoints,
+            enabled=self.wandb_ntk,
+            config=run_config,
+            save_spectrum=local_spectrum,
         )
         self.should_log_probe = self.probe_diagnostics.enabled
         self.should_log_ntk = self.ntk_diagnostics.enabled
@@ -95,6 +115,46 @@ class DiagnosticsLogger:
     def best_epoch(self):
         return self.snapshot_manager.best_epoch
 
+    def _build_logarithmic_steps(self):
+        """Creates set of checkpoint steps to log at if logging on logarithmic scale"""
+        total_epochs = self.num_epochs or int(np.ceil(self.num_steps / self.total_batches))
+        intra_epoch_stride = max(self.total_batches // self.save_freq, 1)
+
+        t = 0
+        steps = [0]
+        for epoch in range(total_epochs):
+            for batch_idx in range(self.total_batches):
+                t += 1
+                if epoch < self.save_init and batch_idx % intra_epoch_stride == 0:
+                    steps.append(t)
+
+            if self.save_init <= epoch <= 25:
+                steps.append(t)
+            elif 25 < epoch <= 65 and epoch % 4 == 0:
+                steps.append(t)
+            elif (epoch > 65 and epoch % 15 == 0) or (epoch == total_epochs - 1):
+                steps.append(t)
+
+        if self.num_steps is not None:
+            steps = [step for step in steps if step <= self.num_steps]
+
+        return set(steps)
+
+    def should_log(self, total_step, batch_idx, force=False):
+        """Returns True if current step is a checkpoint we log at"""
+        if force:
+            return True
+        if total_step in self._logged_steps:
+            return False
+        if self.log_interval == 'per_epoch':
+            return batch_idx == self.last_batch_idx
+        return total_step in self._logarithmic_steps
+
+    def mark_logged(self, total_step):
+        """In case we call log_diagnostics multiple times on the same step in SelectionMethod.py 
+        (i.e. call after each batch and also after each epoch), then we avoid duplicates"""
+        self._logged_steps.add(total_step)
+
     def log_diagnostics(
         self,
         model,
@@ -110,10 +170,13 @@ class DiagnosticsLogger:
         checkpoint_state=None,
         force=False,
     ):
+        """Logs all snapshots, linear probing, parameter and gradient norms, and NTK metrics specified in diagnostics config file"""
+        """Called once at initialization and then after every batch; only logs at specified logging checkpoints (logarithmic step or epoch scale)"""
+        """Note that Snapshots is much more complicated than the other calls"""
         was_training = model.training
         self.snapshot_manager.record_selected_points(epoch, selected_indexes)
 
-        if not self.snapshot_manager.should_log(total_step=total_step, batch_idx=batch_idx, force=force):
+        if not self.should_log(total_step=total_step, batch_idx=batch_idx, force=force):
             return {
                 'logged': False,
                 'is_best': False,
@@ -121,7 +184,7 @@ class DiagnosticsLogger:
                 'best_epoch': self.best_epoch,
             }
 
-        self.snapshot_manager.mark_logged(total_step)
+        self.mark_logged(total_step)
         model.eval()
 
         log_data = {
@@ -131,21 +194,39 @@ class DiagnosticsLogger:
         log_data['diagnostics/epoch'] = int(epoch)
 
         snapshot_metrics = None
-        if self.should_build_snapshot:
+        if self.should_build_snapshot: # If we are logging snapshots and we should log on this step
             snapshot, snapshot_metrics = self.snapshot_manager.build_snapshot(model, device, total_step, epoch)
             self.snapshot_manager.store_snapshot(snapshot, total_step)
             is_best = self.snapshot_manager.update_best_checkpoint(epoch, snapshot_metrics, checkpoint_state)
             self.snapshot_manager.log_summary(epoch, total_step, lr, total_time, time_this_epoch, snapshot_metrics)
 
+            noisy_train_metrics = None
+            if self.snapshot_manager.has_label_noise() and 'train_loss_noisy_labels' in snapshot_metrics:
+                noisy_train_metrics = {
+                    'train_loss_noisy_labels': snapshot_metrics['train_loss_noisy_labels'],
+                    'train_acc_noisy_labels': snapshot_metrics['train_acc_noisy_labels'],
+                }
+                self.logger.info(
+                    f'=====> Epoch: {epoch}, '
+                    f'train_loss_noisy_labels: {noisy_train_metrics["train_loss_noisy_labels"]:.4f}, '
+                    f'train_acc_noisy_labels: {noisy_train_metrics["train_acc_noisy_labels"]:.4f}'
+                )
+
             if self.wandb_loss_acc:
                 log_data['train_loss'] = snapshot_metrics['train_loss']
                 log_data['train_acc'] = snapshot_metrics['train_acc']
+<<<<<<< HEAD
                 # log_data['train_loss_train_loader_labels'] = snapshot_metrics['train_loss']
                 if self.snapshot_manager.uses_true_labels_for_train_accuracy():
                     log_data['train_acc_true_labels'] = snapshot_metrics['train_acc_true_labels']
                     log_data['train_loss_true_labels'] = snapshot_metrics['train_loss_true_labels']
                     log_data['train_acc_loader_labels'] = snapshot_metrics['train_acc']
                     log_data['train_loss_loader_labels'] = snapshot_metrics['train_loss']
+=======
+                if noisy_train_metrics is not None:
+                    log_data['train_loss_noisy_labels'] = noisy_train_metrics['train_loss_noisy_labels']
+                    log_data['train_acc_noisy_labels'] = noisy_train_metrics['train_acc_noisy_labels']
+>>>>>>> main
                 log_data['val_loss'] = snapshot_metrics['val_loss']
                 log_data['val_acc'] = snapshot_metrics['val_acc']
                 log_data['best_val_acc'] = float(self.best_acc)
@@ -155,20 +236,20 @@ class DiagnosticsLogger:
                 log_data['time_epoch'] = float(time_this_epoch)
 
             if self.wandb_normed_logits:
-                log_data['diagnostics/fixed_train_logits_norm_l2_mean'] = snapshot_metrics['train_normed_logits_l2_mean']
+                log_data['diagnostics/train_logits_norm_l2_mean'] = snapshot_metrics['train_normed_logits_l2_mean']
                 log_data['diagnostics/test_logits_norm_l2_mean'] = snapshot_metrics['val_normed_logits_l2_mean']
         else:
             is_best = False
 
-        percent_noisy_selected = self.snapshot_manager.get_percent_noisy_selected()
-        if percent_noisy_selected is not None:
-            log_data['percent noisy points selected'] = float(percent_noisy_selected)
 
         if self.should_log_probe:
             log_data.update(self.probe_diagnostics.log_metrics(model, device))
 
         if self.should_log_ntk:
             log_data.update(self.ntk_diagnostics.log_metrics(model, device, total_step=total_step))
+
+        if self.should_log_param_stats:
+            log_data.update(self.param_grad_diagnostics.log_metrics(model))
 
         self.logger.wandb_log(log_data, step=int(total_step))
 
@@ -182,20 +263,8 @@ class DiagnosticsLogger:
             'best_epoch': self.best_epoch,
         }
 
-    def log_step_param_grad_stats(self, model, total_step, epoch):
-        if not self.should_log_param_stats:
-            return
-
-        log_data = self.param_grad_diagnostics.log_metrics(model)
-        if not log_data:
-            return
-
-        log_data['diagnostics/trigger'] = 'batch_update_param_grad'
-        log_data['diagnostics/total_step'] = int(total_step)
-        log_data['diagnostics/epoch'] = int(epoch)
-        self.logger.wandb_log(log_data, step=int(total_step))
-
     def log_epoch_end_selection_stats(self, epoch, total_step):
+        """Logs metrics to wanbd that must be logged at the epoch level (currently just noisy points selected)"""
         noisy_selection_stats = self.snapshot_manager.get_noisy_selection_stats()
         if noisy_selection_stats is None:
             return
@@ -212,8 +281,8 @@ class DiagnosticsLogger:
                 'diagnostics/epoch': int(epoch),
                 'diagnostics/total_step': int(total_step),
                 'num noisy points selected': noisy_selection_stats['num_noisy_selected'],
-                'percent noisy points selected': noisy_selection_stats['fraction_of_train'],
-                'fraction noisy points selected': noisy_selection_stats['fraction_of_noisy_pool'],
+                'percent of batch with label noise': noisy_selection_stats['fraction_of_train'],
+                'percent of points with label noise selected': noisy_selection_stats['fraction_of_noisy_pool'],
             },
             step=int(total_step),
         )

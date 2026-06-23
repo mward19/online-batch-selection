@@ -1,4 +1,4 @@
-method: Full
+method: TrainLoss
 method_opt:
   ratio: 0.1
   balance: False
