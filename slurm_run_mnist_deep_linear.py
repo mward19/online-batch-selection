@@ -87,6 +87,7 @@ with open(save_dirs_file, "w") as f:
             "--diagnostics", DIAGNOSTICS,
             "--seed", str(seed),
             "--save_dir", save_dir,
+            "--exp_base", EXP_BASE,
             "--wandb_project", WANDB_PROJECT,
         ]
 

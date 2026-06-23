@@ -49,6 +49,13 @@ class DeepLinear(nn.Module):
 
         self.classifier = nn.Linear(all_dims[-2], all_dims[-1])
 
+        # Orthogonal init avoids vanishing forward/backward signal that default init causes at large depth
+        gain = nn.init.calculate_gain('relu') if isinstance(activation, nn.ReLU) else 1.0
+        for layer in self.hidden:
+            if isinstance(layer, nn.Linear):
+                nn.init.orthogonal_(layer.weight, gain=gain)
+        nn.init.orthogonal_(self.classifier.weight)
+
         self.flatten_input = flatten_input
 
     def forward(self, x, *, last_layer_grad_only=False, **kwargs):

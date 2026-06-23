@@ -1,4 +1,5 @@
 import copy
+import json
 from itertools import product
 from pathlib import Path
 from datetime import datetime
@@ -9,39 +10,38 @@ import re
 import yaml
 from scipy.special import ndtr
 
-WANDB_PROJECT = "Matthew—Deep Linear Networks (Ablation June 15)"
+WANDB_PROJECT = "Matthew—Deep Linear Networks (Ablation June 18) (v2)"
 
 USE_SLURM = True
 
-SEEDS         = [1]
+SEEDS         = [1, 2, 3]
 DIAGNOSTICS   = "configs/diagnostics/weight_matrix_tests.yaml"
 CONFIG_DIR    = "configs/makeblobs"
 
 DIMS = [32]
-CENTER_SCALES = [1.0, 3.5]
-# N_SAMPLES = [32, 128, 1024, 16384]
-N_SAMPLES = [16384]
-ALPHAS = [1.5]  # noise_std = alpha / sqrt(n_features)
-EXP_BASE = "./exp-ablation/" 
-# METHODS_HYPERPLANE  = ["rholoss-0.1-hyperplane", "bayesian-0.1-hyperplane"]
-METHODS_HYPERPLANE  = [] # ["rholoss-0.1-hyperplane"]
+CENTER_SCALES = [0.5]
+N_SAMPLES = [32, 1024, 16384]
+ALPHAS = [0.5, 1.0, 2.0]  # noise_std = alpha / sqrt(n_features)
+EXP_BASE = "./exp-ablation-06-18-v2/" 
+METHODS_HYPERPLANE  = ["rholoss-0.1-hyperplane", "bayesian-0.1-hyperplane"]
+# METHODS_HYPERPLANE  = [] # ["rholoss-0.1-hyperplane"]
 METHODS_FIXED = [
      f"{CONFIG_DIR}/method/uniform-0.1.yaml",
-#      f"{CONFIG_DIR}/method/divbs-0.1.yaml",
+     f"{CONFIG_DIR}/method/divbs-0.1.yaml",
 ]
 # METHODS_FIXED = []
 MODEL_CONFIGS = [
     # f"{CONFIG_DIR}/model/deep_linear_saxe/deep_linear_1024_3layer.yaml",
     f"{CONFIG_DIR}/model/deep_linear_saxe/deep_linear_1024_16layer.yaml",
-    f"{CONFIG_DIR}/model/deep_linear_saxe/deep_linear_relu_1024_16layer.yaml",
+    # f"{CONFIG_DIR}/model/deep_linear_saxe/deep_linear_relu_1024_16layer.yaml",
     # f"{CONFIG_DIR}/model/deep_linear_saxe/deep_linear_1024_64layer.yaml",
 ]
 OPTIMS = [
     f"{CONFIG_DIR}/optim/adamw.yaml",
     # f"{CONFIG_DIR}/optim/sgd-step1.yaml",
     # f"{CONFIG_DIR}/optim/sgd-step0.1.yaml",
-    f"{CONFIG_DIR}/optim/sgd-step0.01.yaml",
-    # f"{CONFIG_DIR}/optim/sgd-step0.0001.yaml",
+    # f"{CONFIG_DIR}/optim/sgd-step0.01.yaml",
+    f"{CONFIG_DIR}/optim/sgd-step0.0001.yaml",
     # f"{CONFIG_DIR}/optim/sgd-step0.00001.yaml",
 ]
 GEN_DIR       = Path(CONFIG_DIR) / "generated"
@@ -220,8 +220,9 @@ with open(save_dirs_file, "w") as f:
             "--diagnostics", DIAGNOSTICS,
             "--seed", str(seed),
             "--save_dir", save_dir,
+            "--exp_base", EXP_BASE,
             "--wandb_project", WANDB_PROJECT,
-            "--artifact_suffix", f"d{dim}_cscale{cscale}_n{n}_alpha{alpha}",
+            "--artifact_suffix", json.dumps(dict(d=dim, cscale=cscale, n=n, alpha=alpha)),
         ]
 
         if USE_SLURM:
@@ -231,7 +232,7 @@ with open(save_dirs_file, "w") as f:
                 job_name=f"blobs_s{seed}",
                 dependency=dep,
                 save_dir=save_dir,
-                time='2:00:00'
+                time='1:00:00'
             )
             subprocess.run(
                 ["sbatch"],

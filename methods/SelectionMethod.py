@@ -104,6 +104,7 @@ class SelectionMethod(object):
         }
         diagnostics_context = DiagnosticsRunContext(
             save_dir=self.config['save_dir'],
+            exp_base=self.config['exp_base'],
             project_root=project_root,
             artifact_stem=self.config['artifact_stem'],
             dataset_name=dataset_name,
