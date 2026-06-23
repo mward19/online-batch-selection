@@ -1,7 +1,7 @@
 dataset:
   name: MakeBlobs
   generate_new: False
-  n_samples: 10000
+  n_samples: null
   n_features: null
   centers_type: from_file
   center_file: null
