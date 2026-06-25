@@ -6,7 +6,8 @@ import torch.nn as nn
 import numpy as np
 import random
 import secrets
-from utils import custom_logger,random_str, get_date, re_nest_configs, get_configs, get_save_dir
+from utils import custom_logger,random_str, get_date, re_nest_configs, get_configs
+from run_dir import setup_run_dir, write_guard
 import wandb
 import json
 
@@ -45,14 +46,6 @@ def build_artifact_stem(args, config):
             noise_percent=config['dataset'].get('noise_percent', 0.0)
         )
     ).replace(' ', '')
-
-
-def _normalize_path(path):
-    return os.path.abspath(os.path.expanduser(path))
-
-
-def _default_resume_checkpoint_path(resume_run_path):
-    return os.path.join(resume_run_path, 'checkpoint.pth.tar')
 
 
 def _load_checkpoint_preview(checkpoint_path):
@@ -97,41 +90,39 @@ def _resolve_wandb_run_id(resume_run_path, checkpoint_preview):
     return None
 
 
-def _configure_resume_state(args, config):
-    training_opt = config.setdefault('training_opt', {})
-    resume_run_path = training_opt.get('resume_run_path')
-    if resume_run_path is None or str(resume_run_path).strip() == '':
+def _configure_resume_state(run_mode, run_dir, run_info, config):
+    """Wire up resume after the run dir has been resolved (§9).
+
+    ``extension`` and ``restart`` both read their checkpoint from the (now
+    local) run dir; extension reattaches the parent W&B run, restart reattaches
+    its own. A restart that requeued before the first checkpoint starts fresh in
+    place.
+    """
+    if run_mode == 'fresh':
         return None
 
-    resume_run_path = _normalize_path(resume_run_path)
-    if args.save_dir is not None and _normalize_path(args.save_dir) != resume_run_path:
-        raise ValueError(
-            f"save_dir '{args.save_dir}' must match training_opt.resume_run_path '{resume_run_path}' when resuming a run."
-        )
-
-    checkpoint_path = training_opt.get('resume')
-    if checkpoint_path is None or str(checkpoint_path).strip() == '':
-        checkpoint_path = _default_resume_checkpoint_path(resume_run_path)
-    else:
-        checkpoint_path = _normalize_path(checkpoint_path)
+    training_opt = config['training_opt']
+    checkpoint_path = os.path.join(run_dir, 'checkpoint.pth.tar')
+    if not os.path.isfile(checkpoint_path):
+        return None
 
     checkpoint_preview = _load_checkpoint_preview(checkpoint_path)
-    additional_epochs = training_opt.get('additional_epochs')
-    if additional_epochs is not None:
-        additional_epochs = int(additional_epochs)
-        if additional_epochs < 1:
-            raise ValueError('training_opt.additional_epochs must be a positive integer when resuming a run.')
-        training_opt['num_epochs'] = int(checkpoint_preview['epoch']) + additional_epochs
 
-    training_opt['resume_run_path'] = resume_run_path
+    if run_mode == 'extension':
+        additional_epochs = training_opt.get('additional_epochs')
+        if additional_epochs is not None:
+            additional_epochs = int(additional_epochs)
+            if additional_epochs < 1:
+                raise ValueError('training_opt.additional_epochs must be a positive integer when extending a run.')
+            training_opt['num_epochs'] = int(checkpoint_preview['epoch']) + additional_epochs
+
     training_opt['resume'] = checkpoint_path
-    args.save_dir = resume_run_path
 
     return {
-        'resume_run_path': resume_run_path,
+        'run_mode': run_mode,
         'checkpoint_path': checkpoint_path,
         'checkpoint_preview': checkpoint_preview,
-        'wandb_run_id': _resolve_wandb_run_id(resume_run_path, checkpoint_preview),
+        'wandb_run_id': _resolve_wandb_run_id(run_dir, checkpoint_preview),
     }
 
 
@@ -203,21 +194,15 @@ def main():
     config['artifact_stem'] = build_artifact_stem(args, config)
     print('=====> Config files loaded.')
 
-    resume_state = _configure_resume_state(args, config)
-
-
-
-
     if args.log_file is not None:
         config['log_file'] = args.log_file
-    
 
-    if args.save_dir is None:
-        args.save_dir = get_save_dir(config, args.notes, exp_base=args.exp_base)
-
+    training_opt = config.setdefault('training_opt', {})
+    resume_from = training_opt.get('resume_run_path') or None
+    run_dir, run_mode, run_info = setup_run_dir(resume_from=resume_from)
 
     # method/save_dir
-    save_dir = args.save_dir
+    save_dir = run_dir
     config['save_dir'] = save_dir
     config['exp_base'] = args.exp_base
     method = config['method']
@@ -225,8 +210,7 @@ def main():
     if method not in methods.__all__:
         raise ValueError(f'Method {method} is not supported. Please check the methods.py file.')
 
-    # Create output directory
-    os.makedirs(save_dir, exist_ok=True)
+    resume_state = _configure_resume_state(run_mode, run_dir, run_info, config)
 
 
     # wandb_not_upload
@@ -234,20 +218,28 @@ def main():
         os.environ["WANDB_MODE"] = "dryrun"
     else:
         os.environ["WANDB_MODE"] = "run"
-    
+
     if args.log_file is None:
         logger = custom_logger(save_dir)
     else:
         logger = custom_logger(save_dir, args.log_file)
 
     logger.info('========================= Start Main =========================')
+    logger.info(f'=====> Run directory ({run_mode}): {run_dir}')
 
 
-    # save config file
-    logger.info('=====> Saving config file')
-    with open(os.path.join(save_dir, 'config.yaml'), 'w') as f:
-        yaml.dump(config, f, default_flow_style=False)
-    logger.info('=====> Config file saved')
+    # save config file (fresh: guarded write; extension: refresh the copied
+    # snapshot with the updated epoch budget + lineage; restart: keep existing)
+    config_path = os.path.join(save_dir, 'config.yaml')
+    if run_mode == 'extension':
+        config['resume'] = {'from': run_info['parent_dir']}
+    if run_mode != 'restart':
+        logger.info('=====> Saving config file')
+        if run_mode == 'fresh':
+            write_guard(config_path)
+        with open(config_path, 'w') as f:
+            yaml.dump(config, f, default_flow_style=False)
+        logger.info('=====> Config file saved')
 
 
     init_seeds(args.seed)
@@ -261,11 +253,11 @@ def main():
     if resume_state is not None:
         if resume_state['wandb_run_id'] is None:
             raise ValueError(
-                f"Unable to determine the W&B run id for resumed run at '{resume_state['resume_run_path']}'. "
+                f"Unable to determine the W&B run id for resumed run at '{run_dir}'. "
                 "Expected wandb_run_id.txt, checkpoint metadata, or wandb_local_path.txt."
             )
         wandb_init_kwargs['id'] = resume_state['wandb_run_id']
-        wandb_init_kwargs['resume'] = 'must'
+        wandb_init_kwargs['resume'] = 'must' if run_mode == 'extension' else 'allow'
     run = wandb.init(**wandb_init_kwargs)
     re_nest_configs(run.config)
     wandb.define_metric('acc', 'max')
@@ -289,13 +281,13 @@ def main():
 
     config['wandb_run_id'] = run.id
 
-    wandb_local_path = wandb.run.dir
-    # save wandb_local_path to wandb_local_path.txt
-    with open(os.path.join(save_dir, 'wandb_local_path.txt'), 'w') as f:
-        f.write(wandb_local_path)
-        f.close()
-    with open(os.path.join(save_dir, 'wandb_run_id.txt'), 'w') as f:
-        f.write(run.id)
+    if run_mode == 'fresh':
+        # save wandb_local_path to wandb_local_path.txt
+        wandb_local_path = wandb.run.dir
+        with open(os.path.join(save_dir, 'wandb_local_path.txt'), 'w') as f:
+            f.write(wandb_local_path)
+        with open(os.path.join(save_dir, 'wandb_run_id.txt'), 'w') as f:
+            f.write(run.id)
 
     config['num_gpus'] = torch.cuda.device_count()
     logger.info(f'=====> Number of GPUs: {config["num_gpus"]}')

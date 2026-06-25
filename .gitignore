@@ -22,6 +22,11 @@ run.sh
 exp/
 exp_before0804/
 
+# spring-cleaning output tree (§1)
+experiments/
+cache/
+configs-temp/
+
 # wandb
 wandb/
 
