@@ -24,7 +24,7 @@ diagnostics:
   # Optional teacher kernel reference for NTK diagnostics.
   ntk_teacher_model:
     source: local_pretrained
-    path: /home/lgreen/projects/Online_BS/models/teacher/MNIST.tar
+    path: ./models/teacher/MNIST.tar
     local_pretrained:
       type: LeNet
       params: 

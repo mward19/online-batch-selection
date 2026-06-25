@@ -1,8 +1,8 @@
 dataset:
-  name: MNIST90_Noise
+  name: MNIST_Noise
   root: ./_MNIST
-  noisy_labels_path: labels/MNIST90_noise.p
-  subset_idx_path: /home/lgreen/projects/Online_BS/data/data_utils/mnist_10pct_indices.npy
+  noisy_labels_path: labels/MNIST_noise.p
+  # subset_idx_path: ./data/data_utils/mnist_10pct_indices.npy
   noise_percent: 0.1
   num_classes: 10
   im_size: [32,32]

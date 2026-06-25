@@ -8,7 +8,7 @@ method_opt:
 
 teacher_model_source: local_pretrained # Supported options: "local_pretrained", "clip", "timm"
 teacher_model_path: models/teacher/teacher_generating.pth
-# teacher_model_path: /home/phancock/Online-Batch-Selection/exp/cifar10_small-cnn_30-epoch.tar
+# teacher_model_path: ./exp/cifar10_small-cnn_30-epoch.tar
 
 # If local_pretrained is selected, specify the model architecture here
 local_pretrained:
