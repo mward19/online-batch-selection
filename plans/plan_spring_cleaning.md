@@ -230,6 +230,64 @@ diagnostics:
 
 (Additional keys may be added during implementation as needed.)
 
+### 5.8 Porting & integration detail (implementation-ready)
+
+This subsection pins down how the *existing* diagnostics map onto §5.1–§5.7 and how `SelectionMethod` is rewired. It is written against the current code: `methods/method_utils/{diagnostics,snapshots,ntk,probe,param_grad,weight_matrix}.py` and `methods/SelectionMethod.py`.
+
+**5.8.1 What exists today (the thing being replaced).** `DiagnosticsLogger` (`diagnostics.py`) is a monolith that (a) owns the *when* via `_build_logarithmic_steps`/`should_log` (logarithmic or per-epoch step schedule), (b) builds a snapshot (train/val loss/acc, logit norms, optional progress, optional true-label metrics), (c) calls each enabled sub-diagnostic's `log_metrics(model, device, ...) -> dict`, (d) aggregates into one `wandb.log(..., step=total_step)`, (e) tracks best-acc + writes checkpoints. Sub-diagnostics (`NTKDiagnostics`, `ProbeDiagnostics`, `ParamGradDiagnostics`, `WeightMatrixDiagnostics`, `SnapshotManager`) each already expose a clean `log_metrics`/compute method and an `enabled` flag — **these computations are reused, not rewritten.**
+
+**5.8.2 New module layout.**
+- `methods/diagnostics/base.py` — `TrainState`, `Phase`, `DiagnosticInfo`, `Diagnostic`, `DiagnosticsManager`, `DiagnosticsBuilder` (§5.1–§5.5).
+- `methods/diagnostics/diagnostics.py` — the concrete `Diagnostic` subclasses (5.8.4), each wrapping an existing compute module.
+- `create_diagnostics.py` (repo root) — builds managers+diagnostics from the `diagnostics:` subtree and the run dir (§5.6).
+- The old `methods/method_utils/diagnostics.py` orchestrator is **removed**; the compute modules (`snapshots/ntk/probe/param_grad/weight_matrix`) stay but get their hard-coded output paths redirected under the run dir (§6.3/§6.1).
+
+**5.8.3 Phases & managers.** Managers are cheap; make as many as convenient and don't force a fixed count. Named after the `Phase` they stamp (§5.1/§5.4). The working set:
+- `post_batch_manager` (`Phase.POST_BATCH`) — fired once at `before_run` (the pre-training eval is just its first firing, post-zero-updates) and again after every batch. Each registered diagnostic's `should_run` applies the schedule, so an epoch-only diagnostic simply triggers at epoch ends and step 0. This is the single recurring model-state logging point; there is **no** separate one-shot run-start manager. {{ Re your note: agreed — folded run-start into this recurring manager (it just also fires before training). Kept it as the per-step manager rather than the epoch-end one so the logarithmic *intra-epoch* early logging the current code relies on is preserved; epoch-only diagnostics still behave "epoch-end" via their schedule. ("LOG" was a placeholder name — renamed to `post_batch_manager`.) }}
+- `epoch_end_manager` (`Phase.EPOCH_END`) — fired from `after_epoch`; owns metrics that need per-epoch accumulation (noisy-selection stats), whose `shared_context` (the epoch's selected-point mask) differs from per-step context.
+
+`shared_context` carries what diagnostics *read*: `model`, `device`, `lr`, `total_time`, `time_this_epoch`, `selected_indexes`, `checkpoint_state`. The cache `phase` field distinguishes managers that fire at the same `total_steps`.
+
+**5.8.4 Decomposed diagnostics (small classes wired by dependencies).** Rather than wrapping each existing monolith as one `Diagnostic`, split into **many small classes** connected by the §5.3 dependency mechanism, so shared work (a forward pass, a kernel) is computed **once** and reused: a leaf's `_run()` calls `dep.run()`, which is state-cached. **Dependency diagnostics are built through the `DiagnosticsBuilder` (for `__eq__` dedup) but are *not* registered with any manager and emit nothing on their own** — they exist only to be depended upon. (They still hold a `manager` ref so `get_state()`/`get_context()` work; "not in a manager" means "not in `manager.diagnostics`", i.e. never logged directly.)
+
+Two layers:
+
+- **Compute dependencies (unregistered, cached, no logging).** Reuse the existing heavy math, factored out:
+    - `ForwardPass(loader)` — one model pass over a loader → per-sample `{log_probs, logit_l2_norm, prediction}`. Deduped by loader, so train and val are each computed once and shared by every metric below. (Body = today's `_calculate_snapshot_stats` loop, minus the label-specific loss.)
+    - `PerSampleLossError(loader, label_source)` — depends on `ForwardPass(loader)`; per-sample loss/error against a label source (`loader_labels` / `true_labels`). This is where the §5.8.8 `override_labels` bug is fixed.
+    - `PenultimateFeatures(loader)` — for the probe (body of `ProbeDiagnostics._collect_penultimate_features`).
+    - `NTKKernel(variant)` — the kernel matrix (body of `NTKDiagnostics._compute_kernel_by_variant`); NTK spectrum/alignment metrics become small leaves depending on it.
+- **Logged leaves (registered with a manager).** Each emits one metric or small group from a cached dependency:
+    - from `PerSampleLossError`: `TrainLoss`, `TrainAcc`, `ValLoss`, `ValAcc`, and (only when `true_labels` present) `TrainLossTrueLabels`/`TrainAccTrueLabels`, `…NoisyLabels`;
+    - from `ForwardPass`: `LogitNormL2` (train/val), `Progress` (geodesic);
+    - `LinearProbeAcc` (← `PenultimateFeatures`); `NTKSpectrum`, `NTKAlignment`, `NTKDistance` (← `NTKKernel`);
+    - `ParamNorms`, `GradNorms`, `WeightMatrixNorms` (read the model directly — already small);
+    - `Checkpoint` (rolling + best, §9.2; depends on `ValAcc` for the best-acc decision);
+    - `SelectedPoints`/`SnapshotSave` (local persistence + end-of-run payload).
+
+The existing modules (`snapshots/ntk/probe/param_grad/weight_matrix`) are refactored into these dependency/leaf classes (same math, smaller units) rather than deleted wholesale. Files needn't multiply — group related small classes per file.
+
+Presence of a leaf's key under `diagnostics.diagnostics` enables it (replacing the old boolean flags); `params:` are constructor kwargs; `logging:` overrides the schedule. Enabling a leaf pulls in its dependency chain automatically via `build()`.
+
+**5.8.5 The schedule as `should_run`.** Port `_build_logarithmic_steps`/`should_log` into a small `LogSchedule` object built from `logging_defaults` (`log_interval`, `save_init`, `save_freq`, `total_batches`, `num_epochs`/`num_steps`). A diagnostic's `should_run(state)` returns `state.total_steps in schedule` (or `per_epoch`). Per-diagnostic `logging:` overrides build a distinct `LogSchedule`. The manager's master `should_run` kill-switch gates all. (The old `mark_logged` dedup across the after-batch/after-epoch double-call is subsumed by the §5.3 state cache: equal `(total_steps, phase)` ⇒ cached, logged once.)
+
+**5.8.6 Checkpointing (ties to §9.2).** The `Checkpoint` diagnostic writes the rolling checkpoint to `run_dir/snapshots/checkpoint.pth.tar` via `run_dir.atomic_save` (the §9.2 write-guard exemption), and `model_best.pth.tar` on a new best. **This moves the checkpoint from `run_dir/` root to `run_dir/snapshots/`** — so the Phase-1 resume reader (`main.py: _configure_resume_state`, currently `os.path.join(run_dir, 'checkpoint.pth.tar')`) must be updated to `run_dir/snapshots/checkpoint.pth.tar`, and `SelectionMethod.save_checkpoint` likewise. The end-of-run `SnapshotManager` payload (`snapshots`/`steps` list) is the existing immutable-history artifact; it also moves under `run_dir/snapshots/`.
+
+**5.8.7 `SelectionMethod` rewire.**
+- `__init__`: replace the `DiagnosticsLogger(...)` construction with `create_diagnostics(config['diagnostics'], run_dir=config['save_dir'], context=...)`, which returns the managers (`post_batch_manager`, `epoch_end_manager`) kept on `self`.
+- `before_run`: `self.post_batch_manager.run_diagnostics(TrainState(POST_BATCH, total_steps=0, ...), model=..., ...)` (the pre-training eval).
+- `after_batch`: build `TrainState(POST_BATCH)` + shared context, call `self.post_batch_manager.run_diagnostics(state, model=..., lr=..., selected_indexes=..., checkpoint_state=...)`. Best-acc/`is_best` and `save_model` move into the `Checkpoint` leaf; `self.best_acc/best_epoch` read back from it. Selection-point *recording* (accumulating the per-epoch mask) stays a direct tracker update here — it's a side effect, not a logged metric — and the `SelectedPoints` leaf logs it at epoch end.
+- `after_epoch`: `self.epoch_end_manager.run_diagnostics(...)`.
+- `after_run`: managers/diagnostics `finalize()` (save snapshot payload, NTK spectrum).
+
+**5.8.8 Bug fix carried in.** `snapshots.py: build_snapshot` calls `_calculate_snapshot_stats(..., true_labels=self.true_labels)` but the parameter is `override_labels=` → `TypeError` on noisy datasets with snapshots on (the crash seen in Phase-1/2 smoke testing). Fix to `override_labels=self.true_labels` as part of porting `LossAccSnapshot`.
+
+**5.8.9 Config migration.** Rewrite the `diagnostics:` section of the two merged configs (`configs/makeblobs_uniform.yaml`, `configs/cifar3_rholoss.yaml`) and `configs/cifar3_deep_linear_template.yaml` from the old flat-flag format into the §5.7 class-based schema.
+
+**Resolved choices:**
+- **(O2 — yes)** Checkpoints move to `run_dir/snapshots/` (5.8.6); update the Phase-1 resume reader and `save_checkpoint` accordingly.
+- **(O3 — staged)** Land the dependency framework + the loss/acc/checkpoint/selected-points chain first (GPU-testable), then port `NTK`/`LinearProbe`/`ParamGrad`/`WeightMatrix` into the decomposed form in a follow-up commit **within** Phase 5.
+
 ---
 
 ## 6. Reconciliation Points (where the two plans touch)
@@ -281,11 +339,11 @@ Ordered so each phase leaves the repo runnable.
 - [x] ~~Update SLURM submission scripts to generate + consume templated configs.~~ (`slurm_run_cifar_3_deep_linear.py` reworked onto template + `--config` + `--requeue`)
 - [x] ~~`slurm_run_blobs_deep_linear.py`: **deleted** (user's call) — it was a specialized ablation runner tied to the old 5-flag CLI, the deleted `save_labels.py`, old-style generated 4-file configs, and `afterok` label-dependency wiring. A templated blobs runner can be re-created later if needed.~~
 
-**Phase 5 — Diagnostics framework (§5)**
-- [ ] `TrainState`, `DiagnosticInfo`, `Diagnostic`, `DiagnosticsManager`, `DiagnosticsBuilder`.
-- [ ] `create_diagnostics.py` reading the `diagnostics:` subtree and receiving the run dir.
-- [ ] Port existing diagnostics (spectral snapshots, NTK, linear probes, checkpointing) onto the new `Diagnostic` base with `__eq__` where dedup is possible.
-- [ ] Ensure all diagnostic parameters are included correctly in the single merged config from Phase 3.
+**Phase 5 — Diagnostics framework (§5; decomposed + staged per §5.8)**
+- [x] ~~**5a (framework):** `base.py` — `Phase`, `TrainState`, `DiagnosticInfo`, `Diagnostic` (with dependency `run()`/state cache + `__eq__`), `DiagnosticsManager`, `DiagnosticsBuilder`.~~ (`methods/diagnostics/base.py`; unit-tested: dep dedup/sharing, state cache, conditional logging)
+- [ ] **5b (first cut, GPU-testable):** compute deps `ForwardPass`/`PerSampleLossError` + leaves `TrainLoss/TrainAcc/ValLoss/ValAcc/LogitNormL2/Progress` + `Checkpoint` (rolling → `run_dir/snapshots/`, §9.2/O2) + `SelectedPoints`; `create_diagnostics.py` reading the `diagnostics:` subtree + run dir; rewire `SelectionMethod` (`post_batch_manager`/`epoch_end_manager`); fix the `override_labels` bug (§5.8.8); migrate the makeblobs config's `diagnostics:` to the class schema; **GPU smoke test**.
+- [ ] **5c (port the rest):** `NTK`/`LinearProbe`/`ParamGrad`/`WeightMatrix` into the decomposed form (`NTKKernel`/`PenultimateFeatures` deps + leaves); migrate cifar3 config + template `diagnostics:`.
+- [ ] Update Phase-1 resume reader + `save_checkpoint` to `run_dir/snapshots/checkpoint.pth.tar` (O2).
 
 **Phase 6 — Wiring & cleanup (§6)**
 - [ ] Thread run dir into the diagnostics builder/manager; compose `log_path`/snapshot paths under it.
