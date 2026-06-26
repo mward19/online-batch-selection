@@ -38,7 +38,6 @@ class NTKDiagnostics:
         fixed_train_loader,
         project_root,
         dataset_name,
-        artifact_stem,
         seed,
         config,
         num_classes,
@@ -52,7 +51,6 @@ class NTKDiagnostics:
         self.logger = logger
         self.project_root = project_root
         self.dataset_name = dataset_name
-        self.artifact_stem = artifact_stem
         self.seed = seed
         self.config = config
         self.loader = fixed_train_loader
@@ -113,16 +111,9 @@ class NTKDiagnostics:
         )
         self.spectrum_path = None
         if self.save_spectrum:
-            spectrum_dir = os.path.join(
-                self.project_root,
-                'spectrum',
-                self.dataset_name,
-            )
-            os.makedirs(spectrum_dir, exist_ok=True)
-            self.spectrum_path = os.path.join(
-                spectrum_dir,
-                f'{self.artifact_stem}.p',
-            )
+            # Write inside the run dir; the atomic run dir guarantees uniqueness,
+            # so no shared spectrum/ tree and no collision risk.
+            self.spectrum_path = os.path.join(self.config['save_dir'], 'spectrum.p')
 
     @staticmethod
     def _kernel_inner_product(lhs, rhs):
@@ -870,7 +861,6 @@ class NTK(Diagnostic):
             fixed_train_loader=sc["fixed_train_loader"],
             project_root=sc["project_root"],
             dataset_name=sc["dataset_name"],
-            artifact_stem=sc["artifact_stem"],
             seed=sc["seed"],
             config=sc["config"],
             num_classes=sc["num_classes"],

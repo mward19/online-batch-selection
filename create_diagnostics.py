@@ -78,7 +78,6 @@ def create_diagnostics(method, *, project_root, **other_resources):
     resources = {
         'save_dir':           config['save_dir'],
         'project_root':       project_root,
-        'artifact_stem':      config['artifact_stem'],
         'dataset_name':       config['dataset']['name'],
         'model_name':         config['networks']['params'].get('m_type', config['networks']['type']),
         'seed':               config['seed'],

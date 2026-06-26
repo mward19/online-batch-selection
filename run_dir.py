@@ -20,6 +20,63 @@ LABELS_LINK_NAME = "labels"
 RESUMED_FROM_LINK_NAME = "resumed_from"
 
 
+CONFIG_REF_SIGIL = "$"
+
+
+def _resolve_config_ref(config, path):
+    """Resolve a dotted config path; raise loudly if any segment is absent."""
+    cur = config
+    for part in path.split("."):
+        if not isinstance(cur, dict) or part not in cur:
+            raise KeyError(
+                f"run_name_format references config path '{path}', but segment "
+                f"'{part}' is not present in the config."
+            )
+        cur = cur[part]
+    return cur
+
+
+def _render_run_name_token(config, token):
+    """A ``$``-prefixed string is a config reference (resolved, raises on a bad
+    path); any other scalar is a literal."""
+    if isinstance(token, str) and token.startswith(CONFIG_REF_SIGIL):
+        return str(_resolve_config_ref(config, token[len(CONFIG_REF_SIGIL):]))
+    return str(token)
+
+
+def build_run_name(config, fmt, *, value_sep="_", kv_sep="-"):
+    """Render ``run_name_format`` (a required list) into a run name string.
+
+    Each element is a literal string, a ``$dotted.path`` config reference, or a
+    single-key dict ``{label: [tokens...]}`` rendered as
+    ``label<kv_sep>value_sep.join(values)`` (e.g. ``lr-0.001``). ``value_sep``
+    joins top-level elements and the values within a key-value pair; ``kv_sep``
+    joins a pair's label to its value block. Both are parameters so the scheme
+    can change later.
+    """
+    if fmt is None:
+        raise ValueError(
+            "run_name_format is required in the config but was not provided."
+        )
+    if not isinstance(fmt, list):
+        raise ValueError(f"run_name_format must be a list, got {type(fmt).__name__}.")
+
+    parts = []
+    for element in fmt:
+        if isinstance(element, dict):
+            if len(element) != 1:
+                raise ValueError(
+                    f"run_name_format key-value element must have exactly one key: {element!r}"
+                )
+            (label, tokens), = element.items()
+            tokens = tokens if isinstance(tokens, list) else [tokens]
+            values = [_render_run_name_token(config, t) for t in tokens]
+            parts.append(f"{label}{kv_sep}{value_sep.join(values)}")
+        else:
+            parts.append(_render_run_name_token(config, element))
+    return value_sep.join(parts)
+
+
 def _timestamp():
     return datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -32,19 +89,21 @@ def _slurm_history_dir(experiments_root):
     return os.path.join(experiments_root, SLURM_HISTORY_DIRNAME)
 
 
-def _claim_dir(parent, base_name):
-    """Atomically claim ``parent/base_name``, adding a ``_<n>`` suffix on
-    collision. The atomic ``os.makedirs(exist_ok=False)`` *is* the collision
-    check, so there is no TOCTOU race between parallel jobs."""
-    candidate = os.path.join(parent, base_name)
+def _claim_dir(parent, timestamp, run_name):
+    """Atomically claim ``parent/<timestamp>_<run_name>``, inserting a ``_<n>``
+    suffix **right after the timestamp** on collision (e.g.
+    ``20260626_110000_1_run_CIFAR3_...``). The atomic
+    ``os.makedirs(exist_ok=False)`` *is* the collision check, so there is no
+    TOCTOU race between parallel jobs."""
     n = 0
     while True:
+        stamp = timestamp if n == 0 else f"{timestamp}_{n}"
+        candidate = os.path.join(parent, f"{stamp}_{run_name}")
         try:
             os.makedirs(candidate, exist_ok=False)
             return candidate
         except FileExistsError:
             n += 1
-            candidate = os.path.join(parent, f"{base_name}_{n}")
 
 
 def _make_subdirs(run_dir):
@@ -84,10 +143,12 @@ def _write_resumed_from(run_dir, parent_dir):
     os.symlink(os.path.relpath(parent_dir, run_dir), link)
 
 
-def setup_run_dir(experiments_root=EXPERIMENTS_ROOT, resume_from=None):
+def setup_run_dir(run_name, experiments_root=EXPERIMENTS_ROOT, resume_from=None):
     """Resolve the run directory for this process.
 
-    Returns ``(run_dir, mode, info)`` where ``mode`` is one of:
+    The directory is named ``<timestamp>[_<n>]_<run_name>`` (collision suffix
+    right after the timestamp). Returns ``(run_dir, mode, info)`` where ``mode``
+    is one of:
 
     - ``"extension"``: a new dir forked from ``resume_from`` with the parent's
       contents copied in (§9.3).
@@ -101,7 +162,7 @@ def setup_run_dir(experiments_root=EXPERIMENTS_ROOT, resume_from=None):
         parent_dir = os.path.abspath(resume_from)
         if not os.path.isdir(parent_dir):
             raise FileNotFoundError(f"Resume parent run dir not found: {parent_dir}")
-        run_dir = _claim_dir(experiments_root, f"run_{_timestamp()}")
+        run_dir = _claim_dir(experiments_root, _timestamp(), run_name)
         _copy_run_contents(parent_dir, run_dir)
         _write_resumed_from(run_dir, parent_dir)
         return run_dir, "extension", {"parent_dir": parent_dir}
@@ -112,7 +173,7 @@ def setup_run_dir(experiments_root=EXPERIMENTS_ROOT, resume_from=None):
         if os.path.lexists(pointer):
             return os.path.realpath(pointer), "restart", {}
 
-    run_dir = _claim_dir(experiments_root, f"run_{_timestamp()}")
+    run_dir = _claim_dir(experiments_root, _timestamp(), run_name)
     _make_subdirs(run_dir)
     if job_id is not None:
         _register_slurm_pointer(experiments_root, job_id, run_dir)

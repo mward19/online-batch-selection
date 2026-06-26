@@ -1,6 +1,15 @@
 # Merged single-file config (§4.1). Representative real run:
 # CIFAR3 + 3-layer deep-linear model + RhoLoss selection (CLIP teacher).
 
+# Run-name template: literals are plain strings; $dotted.path are config refs.
+run_name_format:
+  - run
+  - $dataset.name
+  - $method
+  - $training_opt.optimizer
+  - lr: [$training_opt.optim_params.lr]
+  - $training_opt.loss_type
+
 dataset:
   name: CIFAR3  # classes are dogs, cats, birds
   root: ./_CIFAR

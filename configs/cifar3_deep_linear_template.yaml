@@ -1,6 +1,16 @@
 # Config template (§4.2). __REQUIRED__ leaves are filled by generate_configs;
 # seed is supplied separately via main.py --seed.
 
+# Run-name template: literals are plain strings; $dotted.path are config refs.
+# Rendered at runtime against each generated config's filled-in values.
+run_name_format:
+  - run
+  - $dataset.name
+  - $method
+  - $training_opt.optimizer
+  - lr: [$training_opt.optim_params.lr]
+  - $training_opt.loss_type
+
 dataset:
   name: CIFAR3  # classes are dogs, cats, birds
   root: ./_CIFAR

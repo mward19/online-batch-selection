@@ -1,6 +1,15 @@
 # Merged single-file config (§4.1). Fast synthetic smoke/example run:
 # MakeBlobs (noisy) + linear model + uniform selection.
 
+# Run-name template: literals are plain strings; $dotted.path are config refs.
+run_name_format:
+  - run
+  - $dataset.name
+  - $method
+  - $training_opt.optimizer
+  - lr: [$training_opt.optim_params.lr]
+  - $training_opt.loss_type
+
 dataset:
   name: MakeBlobs_Noise
   noise_percent: 0.1

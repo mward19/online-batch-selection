@@ -7,29 +7,12 @@ import numpy as np
 import random
 import secrets
 from utils import custom_logger,random_str, get_date, re_nest_configs, get_configs
-from run_dir import setup_run_dir, write_guard
+from run_dir import setup_run_dir, write_guard, build_run_name
 import wandb
-import json
 
 
 import torch.multiprocessing as mp
 import methods
-
-
-def build_artifact_stem(config):
-    return json.dumps(
-        dict(
-            bsel=config['method'],
-            seed=config['seed'],
-            model=config['networks']['type'],
-            opt=config['training_opt'].get('optimizer'),
-            bs=config['training_opt']['batch_size'],
-            ratio=config.get('method_opt', {}).get('ratio'),
-            lr=config['training_opt']['optim_params']['lr'],
-            wd=config['training_opt']['optim_params']['weight_decay'],
-            noise_percent=config['dataset'].get('noise_percent', 0.0)
-        )
-    ).replace(' ', '')
 
 
 def _load_checkpoint_preview(checkpoint_path):
@@ -140,8 +123,8 @@ def main():
                         help='Notes for the experiment.')
     parser.add_argument('--wandb_not_upload', action='store_true',
                         help='Do not upload the result to wandb.')
-    parser.add_argument('--artifact_suffix', type=str, default=None,
-                        help='JSON-encoded dict of extra fields merged into artifact_stem for snapshot/selected-points file names.')
+    parser.add_argument('--experiments_dir', type=str, default='./experiments',
+                        help='Base directory under which run directories are created.')
 
     args = parser.parse_args()
 
@@ -150,15 +133,16 @@ def main():
     print(f'=====> Loading config: {args.config}')
     config = get_configs(args.config)
     config['seed'] = args.seed
-    config['artifact_stem'] = build_artifact_stem(config)
-    print('=====> Config loaded.')
+    config['run_name'] = build_run_name(config, config.get('run_name_format'))
+    print(f"=====> Config loaded. Run name: {config['run_name']}")
 
     if args.log_file is not None:
         config['log_file'] = args.log_file
 
     config.setdefault('training_opt', {})
     resume_from = config.get('resume', {}).get('from') or None
-    run_dir, run_mode, run_info = setup_run_dir(resume_from=resume_from)
+    run_dir, run_mode, run_info = setup_run_dir(
+        config['run_name'], experiments_root=args.experiments_dir, resume_from=resume_from)
 
     # method/save_dir
     save_dir = run_dir
@@ -217,17 +201,7 @@ def main():
     re_nest_configs(run.config)
     wandb.define_metric('acc', 'max')
     if resume_state is None:
-        if 'noise_percent' in config['dataset'].keys():
-            run.name = (
-                f"{method}_{config['dataset']['name']}_"
-                f"{config['dataset']['noise_percent']}p_"
-                f"{config['training_opt']['optimizer']}_Seed{config['seed']}"
-            )
-        else:
-            run.name = (
-                f"{method}_{config['dataset']['name']}_"
-                f"{config['training_opt']['optimizer']}_Seed{config['seed']}"
-            )
+        run.name = config['run_name']
     else:
         logger.info(
             f"=====> Resuming W&B run {run.id} from {resume_state['checkpoint_path']} "
