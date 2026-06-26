@@ -1,7 +1,7 @@
 # conda/mamba environment intended for use with P100 GPUs on the
 # supercomputer. It takes a while to install (20 minutes?).
 
-# `mamba create -f environment-sc.yml`
+# `mamba create -f environment-sc.yaml`
 # `mamba activate online-bs-p100`
 
 # Use P100 nodes with the `-C pascal` flag, as in 
