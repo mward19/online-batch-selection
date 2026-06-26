@@ -121,7 +121,7 @@ class SelectionMethod(object):
             'logger': self.logger,
         }
         from create_diagnostics import create_diagnostics
-        self.diagnostics = create_diagnostics(config.get('diagnostics', {}), diagnostics_resources)
+        self.diagnostics = create_diagnostics(config.get('diagnostics', {}), diagnostics_resources) 
 
         # Per-epoch selected-point mask (a side-effect tracker, read by the
         # SelectedPoints diagnostic at epoch end; reset each epoch).
