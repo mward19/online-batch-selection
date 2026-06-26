@@ -1,0 +1,61 @@
+# Basic baseline config (§4.1): CIFAR3 + ResNet18 + Uniform@1.0.
+# Diagnostics: train/val loss+acc snapshots + timing.
+
+run_name_format:
+  - run
+  - $dataset.name
+  - $method
+  - $training_opt.optimizer
+  - lr: [$training_opt.optim_params.lr]
+  - $training_opt.loss_type
+
+dataset:
+  name: CIFAR3
+  root: ./_CIFAR
+  num_classes: 3
+  im_size: [32, 32]
+  in_channels: 3
+  input_dim: [1, 3, 32, 32]
+
+networks:
+  type: ResNet_torchvision
+  params:
+    m_type: 'resnet18'
+
+training_opt:
+  num_epochs: 100
+  num_data_workers: 4
+  batch_size: 320
+  test_batch_size: 512
+  optimizer: SGD
+  optim_params:
+    lr: 0.01
+    weight_decay: 0.0005
+  scheduler_params: {}
+  scheduler: 'constant'
+  loss_type: CrossEntropy
+  loss_params: {}
+
+method: Uniform
+method_opt:
+  ratio: 1.0
+  balance: False
+  ratio_scheduler: constant
+  warmup_epochs: 0
+
+diagnostics:
+  logging_defaults:
+    log_interval: logarithmic
+    save_init: 5
+    save_freq: 4
+  diagnostics:
+    TrainLoss: {}
+    TrainAcc: {}
+    ValLoss: {}
+    ValAcc: {}
+    Timing: {}
+    Checkpoint: {}
+
+wandb:
+  project: "Basic Baselines"
+  mode: online

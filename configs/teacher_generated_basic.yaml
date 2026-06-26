@@ -1,0 +1,69 @@
+# Basic baseline config (§4.1): Teacher_Generated synthetic data + TwoLayer
+# student + Uniform@1.0. Diagnostics: train/val loss+acc snapshots + timing.
+
+run_name_format:
+  - run
+  - $dataset.name
+  - $method
+  - $training_opt.optimizer
+  - lr: [$training_opt.optim_params.lr]
+  - $training_opt.loss_type
+
+dataset:
+  name: Teacher_Generated
+  # If this path does not exist a new teacher is generated and cached here.
+  generating_teacher_model_path: models/teacher/teacher_generating.pth
+  networks:
+    type: TwoLayer
+    params:
+      m_type: 'twolayerbinary'
+  n_samples: 10000
+  test_size: 0.2
+  num_classes: 2
+  input_dim: [1, 16]
+  hidden_dim: 15
+  output_dim: 1
+  tau: 3
+
+networks:
+  type: TwoLayer
+  params:
+    m_type: 'twolayerbinary'
+
+training_opt:
+  num_epochs: 500
+  num_data_workers: 4
+  batch_size: 320
+  test_batch_size: 512
+  optimizer: SGD
+  optim_params:
+    lr: 0.01
+    weight_decay: 0.0
+  scheduler_params: {}
+  scheduler: 'constant'
+  loss_type: CrossEntropy
+  loss_params: {}
+
+method: Uniform
+method_opt:
+  ratio: 1.0
+  balance: False
+  ratio_scheduler: constant
+  warmup_epochs: 0
+
+diagnostics:
+  logging_defaults:
+    log_interval: logarithmic
+    save_init: 5
+    save_freq: 4
+  diagnostics:
+    TrainLoss: {}
+    TrainAcc: {}
+    ValLoss: {}
+    ValAcc: {}
+    Timing: {}
+    Checkpoint: {}
+
+wandb:
+  project: "Basic Baselines"
+  mode: online

@@ -1,0 +1,63 @@
+# Basic baseline config (§4.1): MNIST (10% label noise) + LeNet + Uniform@1.0.
+# Diagnostics: train/val loss+acc snapshots + timing + Progress.
+
+run_name_format:
+  - run
+  - $dataset.name
+  - $method
+  - $training_opt.optimizer
+  - lr: [$training_opt.optim_params.lr]
+  - $training_opt.loss_type
+
+dataset:
+  name: MNIST_Noise
+  noise_percent: 0.1
+  root: ./_MNIST
+  num_classes: 10
+  im_size: [32, 32]
+  in_channels: 1
+  input_dim: [1, 1, 32, 32]
+
+networks:
+  type: LeNet
+  params:
+    m_type: 'lenet'
+
+training_opt:
+  num_epochs: 100
+  num_data_workers: 4
+  batch_size: 320
+  test_batch_size: 512
+  optimizer: SGD
+  optim_params:
+    lr: 0.01
+    weight_decay: 0.0
+  scheduler_params: {}
+  scheduler: 'constant'
+  loss_type: CrossEntropy
+  loss_params: {}
+
+method: Uniform
+method_opt:
+  ratio: 1.0
+  balance: False
+  ratio_scheduler: constant
+  warmup_epochs: 0
+
+diagnostics:
+  logging_defaults:
+    log_interval: logarithmic
+    save_init: 5
+    save_freq: 4
+  diagnostics:
+    TrainLoss: {}
+    TrainAcc: {}
+    ValLoss: {}
+    ValAcc: {}
+    Progress: {}
+    Timing: {}
+    Checkpoint: {}
+
+wandb:
+  project: "Basic Baselines"
+  mode: online
