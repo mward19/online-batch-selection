@@ -65,7 +65,7 @@ class Diagnostic:
         return self.manager.current_state
 
     def get_context(self) -> dict:
-        return self.manager.shared_context
+        return self.manager.get_context()
 
     def _run(self) -> DiagnosticInfo:
         raise NotImplementedError
@@ -127,11 +127,29 @@ class DiagnosticsManager:
         self.diagnostics: List[Diagnostic] = []
         self.current_state: Optional[TrainState] = None
         self.should_run = should_run
+        # static_context: run resources, set once at build and never changed.
+        # shared_context: per-step values, updated each run_diagnostics. The two
+        # are kept separate by lifecycle; get_context() merges them.
+        self.static_context: dict = {}
         self.shared_context: dict = {}
 
     def register(self, diagnostic: Diagnostic):
         self.diagnostics.append(diagnostic)
         return diagnostic
+
+    def set_static_context(self, **kwargs):
+        self.static_context = dict(kwargs)
+
+    def get_context(self) -> dict:
+        """Merge of static (set once) and shared (per-step) context. Raises if a
+        key appears in both — the two key sets must stay disjoint."""
+        overlap = self.static_context.keys() & self.shared_context.keys()
+        if overlap:
+            raise KeyError(
+                f"Diagnostics context key(s) {sorted(overlap)} present in both "
+                "static_context and shared_context; the two must be disjoint."
+            )
+        return {**self.static_context, **self.shared_context}
 
     def _update_state(self, state: TrainState):
         self.current_state = state

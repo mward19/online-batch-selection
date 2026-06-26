@@ -92,35 +92,36 @@ class SelectionMethod(object):
         model_name = self.config['networks']['params'].get('m_type', self.config['networks']['type'])
         dataset_name = self.config['dataset']['name']
 
-        # Diagnostics
+        # Diagnostics: a plain dict of static run resources seeds each manager's
+        # static_context (no DiagnosticsRunContext object).
         project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-        diagnostics_context = DiagnosticsRunContext(
-            save_dir=self.config['save_dir'],
-            project_root=project_root,
-            artifact_stem=self.config['artifact_stem'],
-            dataset_name=dataset_name,
-            model_name=model_name,
-            seed=self.config['seed'],
-            fixed_train_loader=self.fixed_train_loader,
-            test_loader=self.test_loader,
-            total_batches=len(self.train_loader),
-            num_train_samples=self.num_train_samples,
-            num_epochs=self.epochs,
-            num_steps=self.num_steps,
-            initial_best_acc=self.best_acc,
-            initial_best_epoch=self.best_epoch,
-            noisy_indices=self.data_info.get('noisy_indices'),
-            true_labels=self.data_info.get('true_labels'),
-            wstar_test_acc=self.data_info.get('wstar_test_acc'),
-            what_test_acc=self.data_info.get('what_test_acc'),
-            bayes_accuracy=self.config.get('bayes_accuracy'),
-            num_classes=self.num_classes,
-            config=self.config,
-            logger=self.logger,
-        )
+        diagnostics_resources = {
+            'save_dir': self.config['save_dir'],
+            'project_root': project_root,
+            'artifact_stem': self.config['artifact_stem'],
+            'dataset_name': dataset_name,
+            'model_name': model_name,
+            'seed': self.config['seed'],
+            'fixed_train_loader': self.fixed_train_loader,
+            'test_loader': self.test_loader,
+            'total_batches': len(self.train_loader),
+            'num_train_samples': self.num_train_samples,
+            'num_epochs': self.epochs,
+            'num_steps': self.num_steps,
+            'initial_best_acc': self.best_acc,
+            'initial_best_epoch': self.best_epoch,
+            'noisy_indices': self.data_info.get('noisy_indices'),
+            'true_labels': self.data_info.get('true_labels'),
+            'wstar_test_acc': self.data_info.get('wstar_test_acc'),
+            'what_test_acc': self.data_info.get('what_test_acc'),
+            'bayes_accuracy': self.config.get('bayes_accuracy'),
+            'num_classes': self.num_classes,
+            'config': self.config,
+            'logger': self.logger,
+        }
         from create_diagnostics import create_diagnostics
-        self.diagnostics = create_diagnostics(config.get('diagnostics', {}), diagnostics_context)
+        self.diagnostics = create_diagnostics(config.get('diagnostics', {}), diagnostics_resources)
 
         # Per-epoch selected-point mask (a side-effect tracker, read by the
         # SelectedPoints diagnostic at epoch end; reset each epoch).

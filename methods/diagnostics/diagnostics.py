@@ -28,20 +28,19 @@ class ForwardPass(Diagnostic):
     """One eval pass over ``loader_key`` ('train'|'val'); returns per-sample
     log-probs, logit L2 norms, predictions, loader targets, and indices."""
 
-    def __init__(self, manager, context, loader_key):
+    def __init__(self, manager, loader_key):
         super().__init__(manager)
-        self.context = context
         self.loader_key = loader_key
-        self.loader = context.fixed_train_loader if loader_key == "train" else context.test_loader
 
     def _run(self):
         ctx = self.get_context()
         model = ctx["model"]
         device = ctx["device"]
+        loader = ctx["fixed_train_loader"] if self.loader_key == "train" else ctx["test_loader"]
         model.eval()
         log_probs, logit_l2, preds, targets, indices = [], [], [], [], []
         with torch.no_grad():
-            for datas in self.loader:
+            for datas in loader:
                 inputs = datas["input"].to(device)
                 tgt = datas["target"].to(device)
                 logits = model(inputs)
@@ -68,20 +67,20 @@ class PerSampleLossError(Diagnostic):
     """Per-sample loss and 0/1 error for ``loader_key`` against ``label_source``
     ('loader' = the loader's own (possibly noisy) labels, 'true' = clean labels)."""
 
-    def __init__(self, manager, builder, context, loader_key, label_source):
+    def __init__(self, manager, builder, loader_key, label_source):
         super().__init__(manager)
         self.loader_key = loader_key
         self.label_source = label_source
-        self.forward_pass = builder.build(ForwardPass, manager, context, loader_key)
-        self.true_labels = _to_long_vector(context.true_labels)
+        self.forward_pass = builder.build(ForwardPass, manager, loader_key)
 
     def _run(self):
         fp = self.forward_pass.run().info
         log_probs, predictions = fp["log_probs"], fp["predictions"]
         if self.label_source == "true":
-            if self.true_labels is None:
-                raise ValueError("PerSampleLossError(label_source='true') needs context.true_labels.")
-            labels = self.true_labels[fp["indices"]]
+            true_labels = _to_long_vector(self.get_context().get("true_labels"))
+            if true_labels is None:
+                raise ValueError("PerSampleLossError(label_source='true') needs true_labels in context.")
+            labels = true_labels[fp["indices"]]
         else:
             labels = fp["targets"]
         loss = -torch.gather(log_probs, 1, labels.view(-1, 1)).squeeze(1)
@@ -106,9 +105,9 @@ class _LossErrorLeaf(Diagnostic):
     metric = "loss"   # 'loss' or 'acc'
     log_key = "train_loss"
 
-    def __init__(self, manager, builder, context, should_run=None, **params):
+    def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
-        self.dep = builder.build(PerSampleLossError, manager, builder, context,
+        self.dep = builder.build(PerSampleLossError, manager, builder,
                                  self.loader_key, self.label_source)
 
     def _run(self):
@@ -142,10 +141,10 @@ class TrueLabelTrainAcc(_LossErrorLeaf):
 class LogitNormL2(Diagnostic):
     """Mean L2 norm of train/val logits."""
 
-    def __init__(self, manager, builder, context, should_run=None, **params):
+    def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
-        self.train_fp = builder.build(ForwardPass, manager, context, "train")
-        self.val_fp = builder.build(ForwardPass, manager, context, "val")
+        self.train_fp = builder.build(ForwardPass, manager, "train")
+        self.val_fp = builder.build(ForwardPass, manager, "val")
 
     def _run(self):
         train = float(self.train_fp.run().info["logit_l2"].mean().item())
@@ -165,10 +164,10 @@ class Progress(Diagnostic):
     old ``SnapshotManager._compute_progress``; depends on the shared forward
     passes."""
 
-    def __init__(self, manager, builder, context, should_run=None, **params):
+    def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
-        self.train_fp = builder.build(ForwardPass, manager, context, "train")
-        self.val_fp = builder.build(ForwardPass, manager, context, "val")
+        self.train_fp = builder.build(ForwardPass, manager, "train")
+        self.val_fp = builder.build(ForwardPass, manager, "val")
 
     def _run(self):
         train_fp = self.train_fp.run().info
@@ -186,15 +185,16 @@ class Checkpoint(Diagnostic):
     ``snapshots/checkpoint.pth.tar`` atomically every time it fires and copies
     ``model_best.pth.tar`` when val accuracy improves."""
 
-    def __init__(self, manager, builder, context, should_run=None, **params):
+    def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, should_run=should_run)
-        self.val_acc = builder.build(PerSampleLossError, manager, builder, context, "val", "loader")
-        self.snapshots_dir = os.path.join(context.save_dir, "snapshots")
+        self.val_acc = builder.build(PerSampleLossError, manager, builder, "val", "loader")
+        sc = manager.static_context
+        self.snapshots_dir = os.path.join(sc["save_dir"], "snapshots")
         self.checkpoint_path = os.path.join(self.snapshots_dir, "checkpoint.pth.tar")
         self.best_path = os.path.join(self.snapshots_dir, "model_best.pth.tar")
         self.save_best = bool(params.get("save_best", True))
-        self.best_acc = float(context.initial_best_acc or 0.0)
-        self.best_epoch = int(context.initial_best_epoch or 0)
+        self.best_acc = float(sc.get("initial_best_acc") or 0.0)
+        self.best_epoch = int(sc.get("initial_best_epoch") or 0)
         self.is_best = False
 
     def _run(self):
@@ -223,12 +223,13 @@ class Checkpoint(Diagnostic):
 class SelectedPoints(Diagnostic):
     """Epoch-end noisy-selection statistics. Reads the epoch's selected-point
     mask from ``shared_context['selected_mask']`` (maintained by the training
-    loop) and the noisy indices from context."""
+    loop) and the noisy indices / train size from the static context."""
 
-    def __init__(self, manager, builder, context, should_run=None, **params):
+    def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, should_run=should_run)
-        self.noisy_indices = _to_numpy_indices(context.noisy_indices)
-        self.num_train_samples = int(context.num_train_samples)
+        sc = manager.static_context
+        self.noisy_indices = _to_numpy_indices(sc.get("noisy_indices"))
+        self.num_train_samples = int(sc["num_train_samples"])
 
     def _run(self):
         mask = self.get_context().get("selected_mask")

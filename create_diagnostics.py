@@ -51,45 +51,53 @@ class DiagnosticsRunner:
         return self.checkpoint.is_best if self.checkpoint is not None else False
 
 
-def _build_schedule(context, logging):
+def _build_schedule(resources, logging):
     return LogSchedule(
-        total_batches=context.total_batches,
-        num_epochs=context.num_epochs,
-        num_steps=context.num_steps,
+        total_batches=resources["total_batches"],
+        num_epochs=resources["num_epochs"],
+        num_steps=resources["num_steps"],
         log_interval=logging.get("log_interval", "logarithmic"),
         save_init=logging.get("save_init", 5),
         save_freq=logging.get("save_freq", 4),
     )
 
 
-def create_diagnostics(diagnostics_config, context):
+def create_diagnostics(diagnostics_config, resources):
+    """Build the per-phase diagnostics managers from the config's ``diagnostics:``
+    subtree. ``resources`` is a plain dict of static run resources (loaders,
+    save_dir, num_classes, true_labels, config, logger, …); it seeds each
+    manager's ``static_context`` and is used here to build the schedules and log
+    paths. Per-step values (model, device, …) arrive later via shared_context.
+    """
     diagnostics_config = diagnostics_config or {}
     defaults = diagnostics_config.get("logging_defaults", {})
     requested = diagnostics_config.get("diagnostics", {}) or {}
 
-    default_schedule = _build_schedule(context, defaults)
-    logs_dir = os.path.join(context.save_dir, "logs")
+    default_schedule = _build_schedule(resources, defaults)
+    logs_dir = os.path.join(resources["save_dir"], "logs")
 
     builder = DiagnosticsBuilder()
     post_batch_manager = DiagnosticsManager()
     epoch_end_manager = DiagnosticsManager()
+    post_batch_manager.set_static_context(**resources)
+    epoch_end_manager.set_static_context(**resources)
     checkpoint = None
 
     for name, spec in requested.items():
         spec = spec or {}
         params = dict(spec.get("params", {}))
         params.setdefault("log_path", os.path.join(logs_dir, f"{name}.log"))
-        schedule = _build_schedule(context, {**defaults, **spec["logging"]}) if spec.get("logging") else default_schedule
+        schedule = _build_schedule(resources, {**defaults, **spec["logging"]}) if spec.get("logging") else default_schedule
 
         if name in POST_BATCH_DIAGNOSTICS:
             cls = POST_BATCH_DIAGNOSTICS[name]
-            diagnostic = cls(post_batch_manager, builder, context, should_run=schedule, **params)
+            diagnostic = cls(post_batch_manager, builder, should_run=schedule, **params)
             post_batch_manager.register(diagnostic)
             if cls is Checkpoint:
                 checkpoint = diagnostic
         elif name in EPOCH_END_DIAGNOSTICS:
             cls = EPOCH_END_DIAGNOSTICS[name]
-            diagnostic = cls(epoch_end_manager, builder, context, should_run=(lambda state: True), **params)
+            diagnostic = cls(epoch_end_manager, builder, should_run=(lambda state: True), **params)
             epoch_end_manager.register(diagnostic)
         else:
             raise ValueError(f"Unknown diagnostic '{name}' in config diagnostics.diagnostics.")
