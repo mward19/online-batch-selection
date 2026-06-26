@@ -20,6 +20,9 @@ class DiagnosticsRunContext:
     initial_best_acc: float = 0.0
     initial_best_epoch: int = 0
     checkpoint_saver: Any = None
+    num_classes: int = 0
+    config: Any = None          # the full merged run config (NTK teacher lookup)
+    logger: Any = None          # for the ported modules' warning messages
     noisy_indices: Any = None
     true_labels: Any = None
     wstar_test_acc: float | None = None

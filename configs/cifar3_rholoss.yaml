@@ -46,19 +46,18 @@ clip:
   tau: 4
 
 diagnostics:
-  log_interval: logarithmic
-  save_init: 5
-  save_freq: 4
-  local_snapshots: true
-  local_points_selected: true
-  local_best_model_checkpoints: false
-  wandb_loss_acc: true
-  wandb_normed_logits: true
-  wandb_param_norms: false
-  wandb_grad_norms: false
-  wandb_linear_probe: false
-  wandb_ntk: false
-  local_spectrum: false
+  logging_defaults:
+    log_interval: logarithmic
+    save_init: 5
+    save_freq: 4
+  diagnostics:
+    TrainLoss: {}
+    TrainAcc: {}
+    ValLoss: {}
+    ValAcc: {}
+    LogitNormL2: {}
+    Checkpoint: {}
+    SelectedPoints: {}
 
 wandb:
   project: "Matthew—Deep Linear Networks"

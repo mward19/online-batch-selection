@@ -247,6 +247,9 @@ class SelectedPoints(Diagnostic):
         return isinstance(other, SelectedPoints)
 
 
+from methods.diagnostics.model_metrics import GradNorms, LinearProbe, ParamNorms, WeightMatrixNorms
+from methods.diagnostics.ntk import NTK
+
 # Class-name -> constructor, plus which manager phase each leaf belongs to.
 POST_BATCH_DIAGNOSTICS = {
     "TrainLoss": TrainLoss,
@@ -257,6 +260,11 @@ POST_BATCH_DIAGNOSTICS = {
     "TrueLabelTrainAcc": TrueLabelTrainAcc,
     "LogitNormL2": LogitNormL2,
     "Progress": Progress,
+    "ParamNorms": ParamNorms,
+    "GradNorms": GradNorms,
+    "WeightMatrixNorms": WeightMatrixNorms,
+    "LinearProbe": LinearProbe,
+    "NTK": NTK,
     "Checkpoint": Checkpoint,
 }
 EPOCH_END_DIAGNOSTICS = {

@@ -116,6 +116,9 @@ class SelectionMethod(object):
             wstar_test_acc=self.data_info.get('wstar_test_acc'),
             what_test_acc=self.data_info.get('what_test_acc'),
             bayes_accuracy=self.config.get('bayes_accuracy'),
+            num_classes=self.num_classes,
+            config=self.config,
+            logger=self.logger,
         )
         from create_diagnostics import create_diagnostics
         self.diagnostics = create_diagnostics(config.get('diagnostics', {}), diagnostics_context)
