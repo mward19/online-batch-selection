@@ -52,6 +52,7 @@ def _build_dataset_info(config, logger, dst_train, dst_test, num_classes, includ
                 logger=logger,
                 dataset_name='TinyImageNet',
                 seed=config.get('seed'),
+                run_dir=config.get('save_dir'),
             )
         )
         payload['train_dset'] = wrapped_dataset(dst_train)

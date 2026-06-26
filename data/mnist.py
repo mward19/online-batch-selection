@@ -101,6 +101,7 @@ def _build_dataset_info(config, logger, dataset_name, dst_train, dst_test, num_c
                 logger=logger,
                 dataset_name=dataset_name,
                 seed=config.get('seed'),
+                run_dir=config.get('save_dir'),
             )
         )
         payload['train_dset'] = wrapped_dataset(dst_train)
@@ -260,17 +261,9 @@ def MNIST90_Noise(config, logger):
     except Exception:
         subset.targets = None
 
-    # apply noise to the subset (after selection), mirroring MNIST_Noise's include_noise behavior
-    # ensure existing noisy-label cache for a different dataset shape is removed
-    labels_path = config['dataset'].get('noisy_labels_path')
-    if labels_path and os.path.isfile(labels_path):
-        try:
-            # attempt to remove stale cached labels so we regenerate for the subset
-            os.remove(labels_path)
-            logger.info(f'Removed stale noisy labels file at {labels_path} to regenerate for subset')
-        except Exception:
-            logger.warning(f'Failed to remove stale noisy labels at {labels_path}; generation may error')
-
+    # apply noise to the subset (after selection), mirroring MNIST_Noise's include_noise behavior.
+    # The cache name is keyed by dataset_name ('MNIST90_Noise'), so the subset gets its own
+    # cache file distinct from the full dataset -- no stale-collision removal needed.
     noise_meta = apply_or_generate_label_noise(
         dataset=subset,
         num_classes=10,
@@ -278,6 +271,7 @@ def MNIST90_Noise(config, logger):
         logger=logger,
         dataset_name='MNIST90_Noise',
         seed=config.get('seed'),
+        run_dir=config.get('save_dir'),
     )
 
     payload['train_dset'] = wrapped_dataset(subset)

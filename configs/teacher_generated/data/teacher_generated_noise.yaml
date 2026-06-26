@@ -3,7 +3,6 @@ dataset:
   # If this path does not exist, must generate new data
   # To generate new data, delete the teacher model stored at this path or specify a new path
   generating_teacher_model_path: models/teacher/teacher_generating.pth
-  noisy_labels_path: labels/Teacher_Generated_noise.p
   noise_percent: 0.1
   networks:
     type: TwoLayer

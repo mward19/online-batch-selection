@@ -3,6 +3,44 @@ import os
 import numpy as np
 import torch
 
+# Determining inputs for a noise-label cache file (§3). The filename losslessly
+# encodes each of these, so different inputs map to different files and a
+# mismatched noise realization can never be silently reused.
+LABEL_CACHE_KEYS = ('dataset', 'noise_percent', 'noise_seed', 'noise_algo')
+
+# Version tag for the derangement algorithm below. Bump whenever the noise
+# generation logic changes, so stale caches get a new name instead of being
+# reused under the old one.
+NOISE_ALGO_VERSION = 1
+
+CACHE_LABELS_DIR = os.path.join('cache', 'labels')
+
+
+def noise_cache_filename(dataset_name, noise_percent, noise_seed, noise_algo=NOISE_ALGO_VERSION):
+	return (
+		f'{dataset_name.lower()}_noise{noise_percent}'
+		f'_nseed{int(noise_seed)}_algo{int(noise_algo)}_labels.pt'
+	)
+
+
+def noise_cache_path(dataset_name, noise_percent, noise_seed, noise_algo=NOISE_ALGO_VERSION):
+	return os.path.join(
+		CACHE_LABELS_DIR,
+		noise_cache_filename(dataset_name, noise_percent, noise_seed, noise_algo),
+	)
+
+
+def _link_cache_into_run_dir(run_dir, labels_path):
+	"""Symlink the shared cache file into the run dir as ``labels`` so the run is
+	browsable as self-contained (§3). No-op if unset or already linked."""
+	if not run_dir:
+		return
+	link = os.path.join(run_dir, 'labels')
+	if os.path.lexists(link):
+		return
+	target = os.path.relpath(os.path.abspath(labels_path), os.path.abspath(run_dir))
+	os.symlink(target, link)
+
 
 def _to_numpy_labels(targets):
 	if isinstance(targets, torch.Tensor):
@@ -185,16 +223,14 @@ def set_dataset_targets(dataset, labels):
 		dataset.imgs = list(dataset.samples)
 
 
-def apply_or_generate_label_noise(dataset, num_classes, dataset_config, logger, dataset_name, seed=None):
-	labels_path = dataset_config.get('noisy_labels_path')
-	if labels_path is None or str(labels_path).strip() == '':
-		raise ValueError(
-			f'dataset.noisy_labels_path must be provided for the {dataset_name} noisy dataset.'
-		)
-
+def apply_or_generate_label_noise(dataset, num_classes, dataset_config, logger, dataset_name,
+								  seed=None, run_dir=None):
 	noise_fraction = float(dataset_config.get('noise_percent', 0.0))
 	if not 0.0 <= noise_fraction <= 1.0:
 		raise ValueError(f'dataset.noise_percent must be in [0, 1], got {noise_fraction}')
+
+	rng_seed = int(dataset_config.get('noise_seed', seed if seed is not None else 0))
+	labels_path = noise_cache_path(dataset_name, noise_fraction, rng_seed)
 
 	true_labels = _to_numpy_labels(dataset.targets)
 	if np.any(true_labels < 0) or np.any(true_labels >= int(num_classes)):
@@ -213,8 +249,7 @@ def apply_or_generate_label_noise(dataset, num_classes, dataset_config, logger, 
 			)
 		logger.info(f'Loaded cached noisy labels for {dataset_name} from {labels_path}')
 	else:
-		rng_seed = dataset_config.get('noise_seed', seed if seed is not None else 0)
-		rng = np.random.default_rng(int(rng_seed))
+		rng = np.random.default_rng(rng_seed)
 		noisy_indices = _sample_noisy_indices(true_labels, noise_fraction, rng)
 		noisy_labels = true_labels.copy()
 		if noisy_indices.size > 0:
@@ -223,8 +258,14 @@ def apply_or_generate_label_noise(dataset, num_classes, dataset_config, logger, 
 				rng,
 				reference_labels=true_labels,
 			)
+		if os.path.exists(labels_path):
+			raise FileExistsError(
+				f'Noise cache {labels_path} appeared unexpectedly; refusing to overwrite.'
+			)
 		_save_noise_payload(labels_path, true_labels, noisy_labels, noisy_indices)
 		logger.info(f'Saved noisy labels for {dataset_name} to {labels_path}')
+
+	_link_cache_into_run_dir(run_dir, labels_path)
 
 	if noisy_labels.shape != true_labels.shape:
 		raise ValueError(

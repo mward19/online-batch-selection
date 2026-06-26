@@ -1,6 +1,5 @@
 dataset:
   name: MakeBlobs_Noise
-  noisy_labels_path: labels/MakeBlobs_noise.p
   noise_percent: 0.1
   generate_new: False
   n_samples: 1000

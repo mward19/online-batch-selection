@@ -294,6 +294,7 @@ def _build_dataset_info(config, logger, dataset_name, dst_train, dst_test, num_c
                 logger=logger,
                 dataset_name=dataset_name,
                 seed=config.get('seed'),
+                run_dir=config.get('save_dir'),
             )
         )
         payload['train_dset'] = wrapped_dataset(dst_train)

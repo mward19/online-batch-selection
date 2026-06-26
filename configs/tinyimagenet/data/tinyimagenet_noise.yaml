@@ -1,7 +1,6 @@
 dataset:
   name: TinyImageNet_Noise
   root: ./_TINYIMAGENET
-  noisy_labels_path: labels/TinyImageNet_noise.p
   noise_percent: 0.1
   num_classes: 200
   im_size: [64,64]

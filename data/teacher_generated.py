@@ -225,6 +225,7 @@ def Teacher_Generated_Noise(config, logger):
         logger=logger,
         dataset_name='Teacher_Generated',
         seed=config.get('seed'),
+        run_dir=config.get('save_dir'),
     )
     test_loader = _build_test_loader(config, test_dset)
 

@@ -1,7 +1,6 @@
 dataset:
   name: FashionMNIST_Noise
   root: ./_MNIST
-  noisy_labels_path: labels/FashionMNIST_noise.p
   noise_percent: 0.1
   num_classes: 10
   im_size: [32,32]

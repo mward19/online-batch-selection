@@ -58,6 +58,7 @@ def _makeblobs_output(config, logger, train_dset, test_dset, num_classes, includ
                 logger=logger,
                 dataset_name='MakeBlobs',
                 seed=config.get('seed'),
+                run_dir=config.get('save_dir'),
             )
         )
     if wstar_test_acc is not None:
