@@ -4,7 +4,8 @@ A template is a single merged config (§4.1) with some leaf values set to the
 sentinel ``__REQUIRED__``, marking values that must be supplied at generation
 time. ``generate_configs`` fills those leaves over the Cartesian product of the
 supplied value lists, writing one merged config per combination to
-``./configs-temp/`` through the §2 write-guard.
+``./configs-temp/``. That directory is scratch/derived output and is exempt from
+the §2 write-guard: existing files are overwritten (with a warning).
 """
 
 import copy
@@ -12,8 +13,6 @@ import itertools
 import os
 
 import yaml
-
-from run_dir import write_guard
 
 REQUIRED = "__REQUIRED__"
 CONFIGS_TEMP_DIR = "configs-temp"
@@ -97,7 +96,8 @@ def generate_configs(template_path, params_to_vary, out_dir=CONFIGS_TEMP_DIR):
             _set_dotted(config, dotted, value)
             fragments.append(_filename_fragment(dotted, value))
         out_path = os.path.join(out_dir, f"{template_stem}_{'_'.join(fragments)}.yaml")
-        write_guard(out_path)
+        if os.path.exists(out_path):
+            print(f"Warning: overwriting existing config {out_path}")
         with open(out_path, "w") as f:
             yaml.dump(config, f, default_flow_style=False, sort_keys=False)
         written.append(out_path)

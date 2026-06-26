@@ -15,6 +15,9 @@ from datetime import datetime
 
 EXPERIMENTS_ROOT = "experiments"
 SLURM_HISTORY_DIRNAME = "slurm_history"
+# Mirrors the logs/slurm/%j path the submit scripts pass to #SBATCH
+# --output/--error (e.g. run_mnist.py). Kept in sync by hand.
+SLURM_LOG_DIR = os.path.join("logs", "slurm")
 RUN_SUBDIRS = ("wandb", "logs", "snapshots")
 LABELS_LINK_NAME = "labels"
 RESUMED_FROM_LINK_NAME = "resumed_from"
@@ -122,6 +125,23 @@ def _register_slurm_pointer(experiments_root, job_id, run_dir):
         pass
 
 
+def _link_slurm_logs(run_dir, job_id):
+    """Symlink this job's SLURM stdout/stderr into ``<run_dir>/logs`` so the
+    logs are reachable from the run dir. The real files stay in
+    ``logs/slurm/`` (SLURM keeps writing to them); these are just live links.
+    Named ``slurm_<job_id>.{out,err}`` so a requeue (new job id, same run dir)
+    adds a fresh pair instead of clobbering the previous attempt."""
+    logs_dir = os.path.join(run_dir, "logs")
+    for ext in ("out", "err"):
+        real = os.path.join(SLURM_LOG_DIR, f"{job_id}.{ext}")
+        link = os.path.join(logs_dir, f"slurm_{job_id}.{ext}")
+        target = os.path.relpath(real, logs_dir)
+        try:
+            os.symlink(target, link)
+        except FileExistsError:
+            pass
+
+
 def _copy_run_contents(src, dst):
     """Copy a parent run's contents into a freshly claimed dir, skipping the
     ``labels`` symlink (re-created fresh per §3). This populates a brand-new
@@ -171,12 +191,15 @@ def setup_run_dir(run_name, experiments_root=EXPERIMENTS_ROOT, resume_from=None)
     if job_id is not None:
         pointer = os.path.join(_slurm_history_dir(experiments_root), job_id)
         if os.path.lexists(pointer):
-            return os.path.realpath(pointer), "restart", {}
+            run_dir = os.path.realpath(pointer)
+            _link_slurm_logs(run_dir, job_id)
+            return run_dir, "restart", {}
 
     run_dir = _claim_dir(experiments_root, _timestamp(), run_name)
     _make_subdirs(run_dir)
     if job_id is not None:
         _register_slurm_pointer(experiments_root, job_id, run_dir)
+        _link_slurm_logs(run_dir, job_id)
     return run_dir, "fresh", {}
 
 
