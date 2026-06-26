@@ -7,10 +7,18 @@ are no longer precomputed here; SLURM stdout/stderr go to logs/slurm/%j.{out,err
 Jobs request --requeue so preemption restarts land back in the same run dir (§9.2).
 """
 
+import os
+import sys
 from pathlib import Path
 from textwrap import dedent
 import shlex
 import subprocess
+
+# This script lives in a subdirectory but is invoked from the repo root
+# (`python run_script_templates/<this>.py`); put the repo root on sys.path so
+# repo-root modules import, and keep all relative paths (configs/, main.py)
+# resolving against the repo-root working directory.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from generate_configs import generate_configs
 

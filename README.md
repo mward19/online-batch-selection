@@ -211,14 +211,17 @@ TrainLoss: { params: { log_key: noisy_train_loss } }
 
 ## 7. Submitting batch jobs to SLURM
 
-Submission scripts (`run_basic.py`, `run_cifar_3_deep_linear.py`,
-`run_mnist.py`) generate/select configs and submit one `sbatch` job each. Run
-them from the repo root **with the environment active**:
+Tracked example submission scripts live in **`run_script_templates/`**; they
+generate/select configs and submit one `sbatch` job each. Run them **from the
+repo root** with the environment active:
 
 ```bash
-python run_basic.py                 # submit the basic single-dataset baselines
-python run_cifar_3_deep_linear.py   # submit a templated CIFAR3 sweep
+python run_script_templates/run_basic.py                # basic single-dataset baselines
+python run_script_templates/run_cifar_3_deep_linear.py  # templated CIFAR3 sweep
 ```
+
+For your own ad-hoc/WIP sweeps, copy one into **`run_scripts/`** — that folder is
+tracked but its contents are git-ignored, so personal scripts stay local.
 
 Each submitted job requests a GPU and `--requeue`, so a preempted job lands back
 in the **same** run directory and resumes from its rolling checkpoint. SLURM
@@ -246,7 +249,8 @@ run directory (optionally with `resume.additional_epochs`).
 - **`configs/`** — ready-to-run merged configs and sweep templates.
 - **`run_dir.py`** — run-name rendering, atomic run-dir creation, resume plumbing.
 - **`generate_configs.py`** — template → concrete configs for sweeps.
-- **`run_*.py`** — SLURM submission scripts.
+- **`run_script_templates/`** — tracked example SLURM submission scripts;
+  **`run_scripts/`** — your local/WIP submission scripts (contents git-ignored).
 - **`experiments/`** — run outputs (git-ignored).
 
 ---

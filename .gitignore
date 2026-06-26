@@ -57,3 +57,7 @@ run_cifar10.sh
 run_cifar100.sh
 run_all.sh
 plot_all.sh
+
+# WIP/local run scripts: keep the folder, ignore its contents.
+run_scripts/*
+!run_scripts/.gitkeep
