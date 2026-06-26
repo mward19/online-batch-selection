@@ -1,10 +1,10 @@
 """Submit the basic single-dataset baseline runs.
 
 Each entry is a concrete merged config (§4.1) under ./configs/ run via
-`main.py --config <config> --seed <s>`. Run output dirs are claimed at runtime
-under ./experiments/ (§2); SLURM stdout/stderr go to logs/slurm/%j.{out,err}.
-Jobs request --requeue so preemption restarts land back in the same run dir
-(§9.2). Set USE_SLURM=False to run locally instead of submitting.
+`main.py --config <config>` (the seed is a top-level key in the config). Run
+output dirs are claimed at runtime under ./experiments/ (§2); SLURM stdout/stderr
+go to logs/slurm/%j.{out,err}. Jobs request --requeue so preemption restarts land
+back in the same run dir (§9.2). Set USE_SLURM=False to run locally instead.
 """
 
 from pathlib import Path
@@ -13,7 +13,6 @@ import shlex
 import subprocess
 
 USE_SLURM = True
-SEEDS = [1]
 
 # (config, job-name tag, wall-time, memory). Synthetic/light jobs ask for less.
 RUNS = [
@@ -27,31 +26,29 @@ RUNS = [
 Path("logs/slurm").mkdir(parents=True, exist_ok=True)
 
 for config_path, tag, walltime, mem in RUNS:
-    for seed in SEEDS:
-        python_cmd = [
-            "python", "main.py",
-            "--config", config_path,
-            "--seed", str(seed),
-        ]
+    python_cmd = [
+        "python", "main.py",
+        "--config", config_path,
+    ]
 
-        if USE_SLURM:
-            sbatch_script = dedent(
-                f"""\
-                #!/bin/bash
-                #SBATCH --job-name={tag}_s{seed}
-                #SBATCH --output=logs/slurm/%j.out
-                #SBATCH --error=logs/slurm/%j.err
-                #SBATCH --gres=gpu:1
-                #SBATCH --cpus-per-task=4
-                #SBATCH --mem={mem}
-                #SBATCH --time={walltime}
-                #SBATCH --requeue
+    if USE_SLURM:
+        sbatch_script = dedent(
+            f"""\
+            #!/bin/bash
+            #SBATCH --job-name={tag}
+            #SBATCH --output=logs/slurm/%j.out
+            #SBATCH --error=logs/slurm/%j.err
+            #SBATCH --gres=gpu:1
+            #SBATCH --cpus-per-task=4
+            #SBATCH --mem={mem}
+            #SBATCH --time={walltime}
+            #SBATCH --requeue
 
-                {shlex.join(python_cmd)}
-                """
-            )
-            subprocess.run(["sbatch"], input=sbatch_script, text=True, check=True)
-        else:
-            subprocess.run(python_cmd, check=True)
+            {shlex.join(python_cmd)}
+            """
+        )
+        subprocess.run(["sbatch"], input=sbatch_script, text=True, check=True)
+    else:
+        subprocess.run(python_cmd, check=True)
 
 print("All jobs submitted." if USE_SLURM else "All jobs complete.")

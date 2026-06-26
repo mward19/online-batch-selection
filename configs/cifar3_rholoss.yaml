@@ -10,6 +10,8 @@ run_name_format:
   - lr: [$training_opt.optim_params.lr]
   - $training_opt.loss_type
 
+seed: 1
+
 dataset:
   name: CIFAR3  # classes are dogs, cats, birds
   root: ./_CIFAR

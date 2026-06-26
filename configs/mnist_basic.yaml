@@ -9,9 +9,11 @@ run_name_format:
   - lr: [$training_opt.optim_params.lr]
   - $training_opt.loss_type
 
+seed: __REQUIRED__
+
 dataset:
   name: MNIST_Noise
-  noise_percent: 0.1
+  noise_percent: __REQUIRED__
   root: ./_MNIST
   num_classes: 10
   im_size: [32, 32]
@@ -30,19 +32,24 @@ training_opt:
   test_batch_size: 512
   optimizer: SGD
   optim_params:
-    lr: 0.01
+    lr: __REQUIRED__
     weight_decay: 0.0
   scheduler_params: {}
   scheduler: 'constant'
   loss_type: CrossEntropy
   loss_params: {}
 
-method: Uniform
+method: __REQUIRED__
 method_opt:
-  ratio: 1.0
+  ratio: 0.1
   balance: False
   ratio_scheduler: constant
   warmup_epochs: 0
+
+teacher_model_source: clip  # Supported: "local_pretrained", "clip", "timm"
+clip:
+  clip_architecture: 'ViT-B/16'
+  tau: 4
 
 diagnostics:
   logging_defaults:
@@ -60,4 +67,4 @@ diagnostics:
 
 wandb:
   project: "Basic Baselines"
-  mode: online
+  mode: offline

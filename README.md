@@ -1,156 +1,274 @@
 <h1 align="center">Online Batch Selection Methods for Training Acceleration</h1>
 
-## Getting Started
+A research codebase for studying online batch-selection methods (RhoLoss, DivBS,
+GradNorm, …) on a range of datasets, with rich training diagnostics logged to
+Weights & Biases. It is built to run on the BYU supercomputer via SLURM.
 
-### Install Project Dependencies
+---
 
-`Online-Batch-Selection` is managed via the `uv` package manager ([installation instructions](https://docs.astral.sh/uv/getting-started/installation/)). To install the dependencies, simply run `uv sync` from the root directory of the repository after cloning.
+## 1. Environment
 
-### Install Pre-Commit Hook
-
-To install this repo's pre-commit hook with automatic linting and code quality checks, simply execute the following command:
-
-```bash
-pre-commit install
-```
-
-When you commit new code, the pre-commit hook will run a series of scripts to standardize formatting and run code quality checks. Any issues must be resolved for the commit to go through. If you need to bypass the linters for a specific commit, add the `--no-verify` flag to your git commit command.
-
-
-## Data Preparation
-For CIFAR datasets, the data will be automatically downloaded by the code.
-
-For Tiny-ImageNet, please download the dataset from [here](http://cs231n.stanford.edu/tiny-imagenet-200.zip) and unzip it to the `_TINYIMAGENET` folder. Then, run the following command to prepare the data:
-```bash
-cd _TINYIMAGENET
-python val_folder.py
-```
-
-## Running
-```bash
-CUDA_VISIBLE_DEVICES=0 uv run main.py \
-  --method configs/cifar10/method/uniform-0.1.yaml \
-  --data configs/cifar10/data/cifar10.yaml \
-  --model configs/cifar10/model/resnet18.yaml \
-  --optim configs/cifar10/optim/adamw-320-0.001-0.01.yaml \
-  --diagnostics configs/cifar10/diagnostics/all_log_interval.yaml \
-  --wandb_not_upload
-```
-The `--wandb_not_upload` flag is optional and keeps wandb logs local instead of uploading them.
-
-`CUDA_VISIBLE_DEVICES` selects visible GPU devices (for example `CUDA_VISIBLE_DEVICES=0` or `CUDA_VISIBLE_DEVICES="0,2"`).
-
-## Save Labels Once
-
-You can generate and cache train/val labels once per dataset using [save_labels.py](save_labels.py). This writes:
-
-- `results/data/labels_{dataset}.p`
-
-General form:
+The project runs in a conda/mamba environment named **`online-bs-p100`** (CUDA
+12.6, targeting P100 "pascal" GPUs). Create it once from the checked-in spec
+(takes ~20 minutes), then activate it:
 
 ```bash
-uv run save_labels.py --data <dataset-config-yaml>
+mamba env create -f environment-sc.yaml   # or: conda env create -f environment-sc.yaml
+mamba activate online-bs-p100
 ```
 
-Dataset examples:
+All commands below assume this environment is active and that you are in the
+repository root.
+
+---
+
+## 2. Running a single experiment
+
+`main.py` takes **one merged YAML config** via `--config`:
 
 ```bash
-uv run save_labels.py --data configs/mnist/data/mnist.yaml
-uv run save_labels.py --data configs/fashionmnist/data/fashionmnist.yaml
-uv run save_labels.py --data configs/cifar10/data/cifar10.yaml
-uv run save_labels.py --data configs/cifar100/data/cifar100.yaml
-uv run save_labels.py --data configs/cifar3/data/cifar3.yaml
-uv run save_labels.py --data configs/tinyimagenet/data/tinyimagenet.yaml
-uv run save_labels.py --data configs/twomoons/data/twomoons.yaml
-uv run save_labels.py --data configs/makeblobs/data/makeblobs.yaml
+python main.py --config configs/cifar3_rholoss.yaml
 ```
 
-Useful flags:
+Common flags:
 
-- `--overwrite`: replace an existing labels file.
-- `--output <path>`: write to a custom path.
-- `--batch_size <int>` and `--num_workers <int>`: control export loader settings.
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--config <path>` | *(required)* | The merged config to run. |
+| `--wandb_not_upload` | off | Keep W&B logs local (offline) instead of uploading. |
+| `--experiments_dir <dir>` | `./experiments` | Base directory for run output directories. |
+| `--log_file <name>` | auto | Override the logger filename. |
 
-## Repository Structure
+> There is **no `--seed` flag** — the seed is a top-level key in the config (see
+> below). To run multiple seeds, sweep `seed` like any other parameter (§5).
 
-The repository is organized as follows:
+Select GPUs with the standard CUDA variable, e.g. `CUDA_VISIBLE_DEVICES=0` or
+`CUDA_VISIBLE_DEVICES="0,2"` (only the listed devices are visible to the run).
 
-### Core Components
+### Interactive GPU session
 
-- **`methods/SelectionMethod.py`** - Parent class containing the main training loop and core batch selection logic. All selection methods inherit from this base class and implement `before_batch` behavior.
-
-- **`methods/`** - Implementations of batch selection methods. Current methods include Full, Uniform, DivBS, RhoLoss, Bayesian, TrainLoss, GradNorm, GradNormIS, and Optk.
-
-- **`methods/method_utils/`** - Shared training utilities (diagnostics, NTK logging, optimizer/scheduler helpers, probes, snapshots).
-
-- **`configs/`** - Configuration tree grouped by dataset (`cifar10`, `cifar100`, `mnist`, etc.) with separate `data`, `method`, `model`, `optim`, and `diagnostics` YAMLs.
-
-  Example method config snippet:
-
-  ```yaml
-  method: Uniform
-  method_opt:
-    ratio: 0.1
-  ```
-
-  > **Note:** `RhoLoss` and `Bayesian` require additional hyperparameters.
-
-- **`main.py`** - Entry point for running experiments. Handles argument parsing and experiment initialization.
-
-### Data
-
-- **`_TINYIMAGENET/`** - Tiny-ImageNet dataset directory (see [Data Preparation](#data-preparation)).
-- **`_CIFAR/`** - CIFAR datasets (automatically downloaded).
-
-### Experiments
-
-- **`exp/`** - Experiment results and logs (git-ignored).
-- **`exports/`** - Exported analysis artifacts for completed runs.
-- **`results/`** - Aggregated outputs used by plotting/post-processing scripts.
-- **`wandb/`** - Weights & Biases logging directory (git-ignored).
-
-### Key Files to Review
-
-1. Start with `methods/SelectionMethod.py` to understand the training loop architecture
-2. Explore `methods/` to see specific batch selection implementations
-3. Check `configs/` for experiment configuration options
-4. Review `methods/method_utils/diagnostics.py` and `methods/method_utils/ntk.py` for diagnostics/NTK behavior
-
-## Development
-
-### Managing Dependencies
-
-To add a new dependency to the project, run `uv add <package-name>`. This will install the dependency into uv's managed .venv and automatically update the `pyproject.toml` file and the `uv.lock` file, ensuring that the dependency is available for all users of the project who run `uv sync`.
-
-To remove a dependency, run `uv remove <package-name>`. This will perform the reverse of `uv add` (including updating the `pyproject.toml` and `uv.lock` files).
-
-See [uv's documentation](https://docs.astral.sh/uv/guides/projects/#managing-dependencies) for more details.
-
-## Optional: Enable TRAK / TRAKer for Projection NTK Diagnostics
-
-Projection NTK variants (`proj-pseudo`, `proj-trace`) require `TRAKer` from `trak`, which may not be present in the default project dependency set.
-
-Install it in your current `uv` environment:
+To run interactively on a P100 node:
 
 ```bash
-uv pip install traker
+salloc -C pascal --time=1:00:00 --ntasks=1 --nodes=1 --gpus=1 --mem=8000M
+mamba activate online-bs-p100
+python main.py --config configs/makeblobs_basic.yaml --wandb_not_upload
 ```
 
-If you specifically need the PNNL projection NTK implementation, install it from source:
+---
+
+## 3. The config system
+
+A config is a **single merged YAML** with these top-level pieces. Required keys
+(`run_name_format`, `seed`) raise a clear error if missing.
+
+```yaml
+# How the run is named (see §4). Plain strings are literals; $dotted.path
+# entries are resolved against this config (a bad path raises).
+run_name_format:
+  - run
+  - $dataset.name
+  - $method
+  - $training_opt.optimizer
+  - lr: [$training_opt.optim_params.lr]   # rendered as e.g. lr-0.001
+  - $training_opt.loss_type
+
+seed: 1                      # top-level; drives all RNG (was the old --seed flag)
+
+dataset:                     # name must match a loader in data/__init__.py
+  name: CIFAR3
+  root: ./_CIFAR
+  num_classes: 3
+  # ... dataset-specific keys; *_Noise datasets also take noise_percent
+
+networks:                    # the model (models/__init__.py)
+  type: ResNet_torchvision
+  params: { m_type: 'resnet18' }
+
+training_opt:
+  num_epochs: 100
+  batch_size: 320
+  test_batch_size: 512
+  num_data_workers: 4
+  optimizer: SGD             # SGD | AdamW | ...
+  optim_params: { lr: 0.01, weight_decay: 0.0005 }
+  scheduler: 'constant'
+  scheduler_params: {}
+  loss_type: CrossEntropy
+  loss_params: {}
+
+method: Uniform              # Uniform | Full | RhoLoss | DivBS | Bayesian | TrainLoss | GradNorm | GradNormIS
+method_opt:
+  ratio: 1.0                 # fraction of each batch kept (1.0 = no selection)
+  balance: False
+  ratio_scheduler: constant
+  warmup_epochs: 0
+
+diagnostics:                 # what gets logged (see §6)
+  logging_defaults: { log_interval: logarithmic, save_init: 5, save_freq: 4 }
+  diagnostics:
+    TrainLoss: {}
+    TrainAcc: {}
+    ValLoss: {}
+    ValAcc: {}
+    Timing: {}
+    Checkpoint: {}
+
+wandb:                       # passed to wandb.init(); --wandb_not_upload overrides mode
+  project: "My Project"
+  mode: online               # online | offline | disabled
+```
+
+Ready-to-run example configs live in `configs/` (e.g. `cifar3_rholoss.yaml`,
+`makeblobs_basic.yaml`, `mnist_basic.yaml`, `cifar10_basic.yaml`,
+`teacher_generated_basic.yaml`).
+
+---
+
+## 4. Run naming & output directories
+
+`run_name_format` is rendered by `build_run_name` (in `run_dir.py`) into a run
+name, e.g. `run_CIFAR3_RhoLoss_AdamW_lr-0.001_CrossEntropy`. Separators are
+configurable (`value_sep="_"`, `kv_sep="-"`).
+
+Each run gets a **self-contained directory** under `--experiments_dir`:
+
+```
+experiments/<timestamp>[_<n>]_<run_name>/
+  config.yaml            # exact config that ran
+  logs/                  # per-diagnostic logs + SLURM stdout/stderr links
+  snapshots/             # checkpoint.pth.tar (rolling) + model_best.pth.tar
+  wandb/                 # local W&B files
+  labels -> ...          # symlink into the shared noise-label cache (noisy datasets)
+```
+
+The directory is claimed **atomically**; if two runs would collide on the
+timestamp, a `_<n>` suffix is inserted right after the timestamp. The W&B run
+name is the rendered run name (it need not be unique). Noise labels are cached
+lazily on first load under `./cache/labels/` — there is no separate "save labels"
+step.
+
+---
+
+## 5. Parameter sweeps
+
+Sweeps use a **template config** plus `generate_configs.py`. A template is a
+normal merged config with some leaves set to the sentinel `__REQUIRED__`:
+
+```yaml
+# configs/cifar3_deep_linear_template.yaml (excerpt)
+seed: __REQUIRED__
+method: __REQUIRED__
+training_opt:
+  optim_params: { lr: __REQUIRED__ }
+networks:
+  params: { num_hidden_layers: __REQUIRED__ }
+```
+
+A submission script fills every `__REQUIRED__` leaf over the Cartesian product of
+value lists, writing one concrete config per combination into `./configs-temp/`:
+
+```python
+# run_cifar_3_deep_linear.py (excerpt)
+from generate_configs import generate_configs
+
+PARAMS_TO_VARY = {
+    "seed": [1, 2, 3],                       # seed is swept like any other key
+    "method": ["RhoLoss"],
+    "networks.params.num_hidden_layers": [3],
+}
+config_paths = generate_configs("configs/cifar3_deep_linear_template.yaml", PARAMS_TO_VARY)
+```
+
+Rules: every key in `PARAMS_TO_VARY` must be `__REQUIRED__` in the template, and
+every `__REQUIRED__` leaf must be covered by `PARAMS_TO_VARY` (otherwise it
+raises). Generated filenames encode the varied values, e.g.
+`..._seed1_methodRhoLoss_....yaml`.
+
+---
+
+## 6. Diagnostics
+
+The `diagnostics.diagnostics` block is a set of **leaves** to log. Each is keyed
+by class name with optional `params`. Available leaves include:
+
+- **Snapshots:** `TrainLoss`, `TrainAcc`, `ValLoss`, `ValAcc`
+  (and `TrueLabelTrainLoss`/`TrueLabelTrainAcc` for clean-label metrics on noisy data)
+- **`Timing`** — wall-clock `total_time` / `time_this_epoch` (epoch end)
+- **`Progress`** — geodesic progress of predictions toward the labels
+- **`LogitNormL2`**, **`ParamNorms`**, **`GradNorms`**, **`WeightMatrixNorms`**
+- **`LinearProbe`**, **`NTK`** (heavier; take `params`)
+- **`Checkpoint`** — rolling + best checkpoint (needed to resume / track best acc)
+- **`SelectedPoints`** — noisy-selection stats (epoch end)
+
+A metric's displayed name can be overridden, e.g. on a noisy dataset:
+
+```yaml
+TrainLoss: { params: { log_key: noisy_train_loss } }
+```
+
+---
+
+## 7. Submitting batch jobs to SLURM
+
+Submission scripts (`run_basic.py`, `run_cifar_3_deep_linear.py`,
+`run_mnist.py`) generate/select configs and submit one `sbatch` job each. Run
+them from the repo root **with the environment active**:
 
 ```bash
-uv pip install "git+https://github.com/pnnl/projection_ntk.git"
+python run_basic.py                 # submit the basic single-dataset baselines
+python run_cifar_3_deep_linear.py   # submit a templated CIFAR3 sweep
 ```
 
-Quick verification:
+Each submitted job requests a GPU and `--requeue`, so a preempted job lands back
+in the **same** run directory and resumes from its rolling checkpoint. SLURM
+stdout/stderr go to `logs/slurm/%j.{out,err}` and are symlinked into the run
+dir. Set `USE_SLURM = False` at the top of a script to run locally instead of
+submitting.
+
+To resume / extend a finished run, point a config's `resume.from` at an existing
+run directory (optionally with `resume.additional_epochs`).
+
+---
+
+## 8. Repository layout
+
+- **`main.py`** — entry point: loads the config, claims a run dir, runs training.
+- **`methods/SelectionMethod.py`** — base training loop; subclasses implement
+  `before_batch` to select/weight each minibatch. Methods: Full, Uniform, DivBS,
+  RhoLoss, Bayesian, TrainLoss, GradNorm, GradNormIS.
+- **`methods/diagnostics/`** — the diagnostics framework (leaves, managers, NTK,
+  probes, model metrics).
+- **`data/`** — dataset loaders; `dataset.name` must match a function in
+  `data/__init__.py` (CIFAR3/10/100, MNIST/FashionMNIST, TinyImageNet, MakeBlobs,
+  Teacher_Generated, and `*_Noise` variants).
+- **`models/`** — model definitions (ResNet, LeNet, Linear, DeepLinear, TwoLayer).
+- **`configs/`** — ready-to-run merged configs and sweep templates.
+- **`run_dir.py`** — run-name rendering, atomic run-dir creation, resume plumbing.
+- **`generate_configs.py`** — template → concrete configs for sweeps.
+- **`run_*.py`** — SLURM submission scripts.
+- **`experiments/`** — run outputs (git-ignored).
+
+---
+
+## 9. Data preparation
+
+- **CIFAR / MNIST / FashionMNIST** are downloaded automatically on first use
+  (into `./_CIFAR`, `./_MNIST`, …).
+- **Tiny-ImageNet:** download from
+  [here](http://cs231n.stanford.edu/tiny-imagenet-200.zip), unzip into
+  `_TINYIMAGENET`, then `cd _TINYIMAGENET && python val_folder.py`.
+- **MakeBlobs / Teacher_Generated** are synthetic and generated on demand.
+
+---
+
+## 10. Optional: TRAK for projection-NTK diagnostics
+
+The projection NTK variants (`proj-pseudo`, `proj-trace`) need `TRAKer`:
 
 ```bash
-uv run python -c "from trak import TRAKer; print('TRAKer import OK')"
+pip install traker
+# or the PNNL implementation:
+pip install "git+https://github.com/pnnl/projection_ntk.git"
+python -c "from trak import TRAKer; print('TRAKer import OK')"
 ```
-
-## TODO
-
-- [ ] Fix multiple GPU parallelization.
-- [ ] Fix saving/loading training state so runs can be resumed reliably (including diagnostics state in `methods/method_utils/diagnostics.py`).
-- [ ] Fix run naming to avoid output overwrites.
-- [ ] Merge in Connor's code.

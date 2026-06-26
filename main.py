@@ -114,7 +114,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True,
                         help='single merged config YAML (§4.1)')
-    parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--log_file', type=str,
                         default=None,
                         help='Logger file name.')
@@ -132,7 +131,9 @@ def main():
     # load the single merged config file (§4.1)
     print(f'=====> Loading config: {args.config}')
     config = get_configs(args.config)
-    config['seed'] = args.seed
+    if 'seed' not in config:
+        raise ValueError("'seed' is required as a top-level config key but was not provided.")
+    config['seed'] = int(config['seed'])
     config['run_name'] = build_run_name(config, config.get('run_name_format'))
     print(f"=====> Config loaded. Run name: {config['run_name']}")
 
@@ -184,7 +185,7 @@ def main():
         logger.info('=====> Config file saved')
 
 
-    init_seeds(args.seed)
+    init_seeds(config['seed'])
     # logger.info(f'=====> Random seed initialized to {config["seed"]}')
     logger.info(f'=====> Wandb initialized')
     wandb_kwargs['config'] = config
