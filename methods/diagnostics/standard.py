@@ -25,7 +25,7 @@ from run_dir import atomic_save
 # --------------------------------------------------------------------------- #
 
 class ForwardPass(Diagnostic):
-    """One eval pass over ``loader_key`` ('train'|'val'); returns per-sample
+    """One eval pass over `loader_key` ('train'|'val'); returns per-sample
     log-probs, logit L2 norms, predictions, loader targets, and indices."""
 
     def __init__(self, manager, loader_key):
@@ -63,7 +63,7 @@ class ForwardPass(Diagnostic):
 
 
 class PerSampleLossError(Diagnostic):
-    """Per-sample loss and 0/1 error for ``loader_key`` against ``label_source``
+    """Per-sample loss and 0/1 error for `loader_key` against `label_source`
     ('loader' = the loader's own (possibly noisy) labels, 'true' = clean labels)."""
 
     def __init__(self, manager, loader_key, label_source):
@@ -99,8 +99,8 @@ class PerSampleLossError(Diagnostic):
 
 class _LossErrorLeaf(Diagnostic):
     """Shared base for the mean-loss / mean-acc leaves. Subclasses MUST set all
-    four class attrs below; ``log_key`` may also be overridden per-run via the
-    config's diagnostics ``params``."""
+    four class attrs below; `log_key` may also be overridden per-run via the
+    config's diagnostics `params`."""
     loader_key = None      # 'train' (fixed_train_loader) | 'val' (test_loader)
     label_source = None    # 'loader' (loader's own labels) | 'true' (clean labels)
     metric = None          # 'loss' (mean NLL) | 'acc' (1 - mean 0/1 error)
@@ -172,9 +172,8 @@ class LogitNormL2(Diagnostic):
 
 class Progress(Diagnostic):
     """Geodesic progress (in [0,1]) from the uniform-prediction point toward the
-    one-hot labels on the probability sphere, for train and val. Ported from the
-    old ``SnapshotManager._compute_progress``; depends on the shared forward
-    passes."""
+    one-hot labels on the probability sphere, for train and val. Depends on the
+    shared forward passes."""
 
     def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
@@ -194,8 +193,8 @@ class Progress(Diagnostic):
 
 class Checkpoint(Diagnostic):
     """Rolling checkpoint + best-model tracking. Writes the rolling
-    ``snapshots/checkpoint.pth.tar`` atomically every time it fires and copies
-    ``model_best.pth.tar`` when val accuracy improves."""
+    `snapshots/checkpoint.pth.tar` atomically every time it fires and copies
+    `model_best.pth.tar` when val accuracy improves."""
 
     def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, should_run=should_run)
@@ -256,8 +255,8 @@ class SelectedPoints(Diagnostic):
 
 class SelectedPointsSummary(Diagnostic):
     """Epoch-end noisy-selection statistics. Reads the epoch's selected-point
-    mask from ``method._epoch_selected_mask`` and the noisy indices / train size
-    from ``method``."""
+    mask from `method._epoch_selected_mask` and the noisy indices / train size
+    from `method`."""
 
     def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, should_run=should_run)
@@ -283,7 +282,7 @@ class SelectedPointsSummary(Diagnostic):
 class Timing(Diagnostic):
     """Epoch-end wall-clock telemetry: cumulative training time and the time
     spent in the most recent epoch, read from the manager's shared context
-    (populated by ``SelectionMethod.after_epoch``)."""
+    (populated by `SelectionMethod.after_epoch`)."""
 
     def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
@@ -334,8 +333,16 @@ class MinibatchScores(Diagnostic):
 
 
 def _geodesic_progress(log_probs, labels):
-    """Geodesic interpolation parameter between the uniform (ignorance) point and
-    the one-hot ground truth on the unit sphere of sqrt-probabilities."""
+    """
+    Geodesic interpolation parameter between the uniform (ignorance) point and
+    the one-hot ground truth on the unit sphere of sqrt-probabilities.
+
+    log_probs: tensor of shape (num_samples, num_classes). Each row is the
+    output distribution of the model on the corresponding point
+
+    labels: int tensor of shape (num_samples). Contains ground truth labels for
+    each data point as indices.
+    """
     from scipy import optimize
 
     if log_probs.numel() == 0:

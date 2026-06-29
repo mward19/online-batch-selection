@@ -18,23 +18,15 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from generate_configs import generate_configs
 from utils import run_job, RunType
 
-RUN_TYPE = RunType.DRY
+RUN_TYPE = RunType.SBATCH
 
-TEMPLATE = "template_configs/noisy_mnist_basic.yaml"
+CONFIG = "template_configs/mnist_basic.yaml"
 
-# Cartesian product over these fills the template's __REQUIRED__ leaves (incl. seed).
-PARAMS_TO_VARY = {
-    "seed": [1, 2, 3],
-    "method": ["RhoLoss", "Uniform"],
-}
-
-config_paths = generate_configs(TEMPLATE, PARAMS_TO_VARY)
 Path("logs/slurm").mkdir(parents=True, exist_ok=True)
 
-for config_path in tqdm(config_paths, desc="Submitting jobs"):
-    # Download the CLIP teacher on the login node before any compute job runs.
-    subprocess.run(["python", "perform_downloads.py", "--method", config_path], check=True)
+# Download the CLIP teacher on the login node before any compute job runs.
+# subprocess.run(["python", "perform_downloads.py", "--method", config_path], check=True)
 
-    run_job(config_path, RUN_TYPE)
+run_job(CONFIG, RUN_TYPE)
 
 print("Completed.")

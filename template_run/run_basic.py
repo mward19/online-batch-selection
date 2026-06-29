@@ -4,17 +4,18 @@ Each entry is a concrete merged config under ./config_templates/ run via
 `main.py --config <config>` (the seed is a top-level key in the config). Run
 output dirs are claimed at runtime under ./experiments/; SLURM stdout/stderr
 go to logs/slurm/%j.{out,err}. Jobs request --requeue so preemption restarts land
-back in the same run dir. Set USE_SLURM=False to run locally instead.
+back in the same run dir.
 """
 
 import sys
 import os
 from pathlib import Path
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import run_job, RunType
 
-USE_SLURM = True
+RUN_TYPE = RunType.SBATCH
 
 # (config, job-name tag, wall-time, memory). Synthetic/light jobs ask for less.
 RUNS = [
@@ -27,14 +28,7 @@ RUNS = [
 
 Path("logs/slurm").mkdir(parents=True, exist_ok=True)
 
-run_type = RunType.SBATCH if USE_SLURM else RunType.NORMAL
-for config_path, tag, walltime, mem in RUNS:
-    run_job(
-        config_path, 
-        run_type,
-        time=walltime,
-        mem=mem,
-        name=tag
-    )
+for config_path, tag, walltime, mem in tqdm(RUNS, desc="Submitting jobs"):
+    run_job(config_path, RUN_TYPE, time=walltime, mem=mem, name=tag)
 
-print("All jobs submitted." if USE_SLURM else "All jobs complete.")
+print("Completed.")

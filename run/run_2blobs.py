@@ -1,4 +1,4 @@
-"""Submit the CIFAR3 deep-linear sweep using templated single-file configs.
+"""Submit the makeblobs antipodal sweep using templated single-file configs.
 
 Configs are generated from a template into ./configs-temp/ and each is run via
 `main.py --config <generated>` (seed is a swept top-level config key, not a CLI
@@ -11,30 +11,45 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from tqdm import tqdm
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from generate_configs import generate_configs
 from utils import run_job, RunType
 
-TEMPLATE = "configs/makeblobs_antipodal.yaml"
+
+RUN_TYPE = RunType.SBATCH
+Path("logs/slurm").mkdir(parents=True, exist_ok=True)
+
+# RHOLOSS with scores used as distribution ------------------------------------------
+TEMPLATE = "configs/makeblobs_antipodal_dist.yaml"
 
 # Cartesian product over these fills the template's __REQUIRED__ leaves (incl. seed).
 PARAMS_TO_VARY = {
     "seed": [1, 2, 3],
-    # "method": ["RhoLoss"],
-    # "networks.params.num_hidden_layers": [3],
-    "method_opt.scores_as_distribution": [True, False]
+    "method_opt.softmax_lambda": [0.001, 0.01],
 }
 
 config_paths = generate_configs(TEMPLATE, PARAMS_TO_VARY)
 
-Path("logs/slurm").mkdir(parents=True, exist_ok=True)
-
-for config_path in config_paths:
-    # Download the CLIP teacher on the login node before any compute job runs.
+for config_path in tqdm(config_paths, desc="Submitting jobs"):
     subprocess.run(["python", "perform_downloads.py", "--method", config_path], check=True)
+    run_job(config_path, RUN_TYPE)
 
-    run_job(config_path, RunType.SBATCH)
+# Normal RHOLOSS --------------------------------------------------------------------
+# RUN_TYPE = RunType.SBATCH
+# TEMPLATE = "configs/makeblobs_antipodal_standard.yaml"
 
-print("All jobs submitted.")
+# # Cartesian product over these fills the template's __REQUIRED__ leaves (incl. seed).
+# PARAMS_TO_VARY = {
+#     "seed": [1, 2, 3],
+# }
+
+# config_paths = generate_configs(TEMPLATE, PARAMS_TO_VARY)
+
+# for config_path in tqdm(config_paths, desc="Submitting jobs"):
+#     subprocess.run(["python", "perform_downloads.py", "--method", config_path], check=True)
+#     run_job(config_path, RUN_TYPE)
+
+# print("Completed.")
