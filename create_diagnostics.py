@@ -6,12 +6,8 @@ drives at run-start/after-batch/after-epoch.
 import os
 
 from methods.diagnostics.base import DiagnosticsBuilder, DiagnosticsManager, Phase, TrainState
-from methods.diagnostics.diagnostics import (
-    Checkpoint,
-    EPOCH_END_DIAGNOSTICS,
-    POST_BATCH_DIAGNOSTICS,
-    _LossErrorLeaf,
-)
+from methods.diagnostics.standard import Checkpoint, _LossErrorLeaf
+from methods.diagnostics.diagnostics import EPOCH_END_DIAGNOSTICS, POST_BATCH_DIAGNOSTICS
 from methods.diagnostics.schedule import LogSchedule
 
 
@@ -23,15 +19,15 @@ class DiagnosticsRunner:
         self.epoch_end_manager = epoch_end_manager
         self.checkpoint = checkpoint
 
-    def run_post_batch(self, total_steps, epoch, batch_idx, total_epochs, total_batches, **context):
+    def run_post_batch(self, total_steps, epoch, batch_idx, total_epochs, total_batches):
         state = TrainState(total_steps=total_steps, phase=Phase.POST_BATCH, epoch=epoch,
                            batch_idx=batch_idx, total_epochs=total_epochs, total_batches=total_batches)
-        self.post_batch_manager.run_diagnostics(state, **context)
+        self.post_batch_manager.run_diagnostics(state)
 
-    def run_epoch_end(self, total_steps, epoch, total_epochs, **context):
+    def run_epoch_end(self, total_steps, epoch, total_epochs):
         state = TrainState(total_steps=total_steps, phase=Phase.EPOCH_END, epoch=epoch,
                            total_epochs=total_epochs)
-        self.epoch_end_manager.run_diagnostics(state, **context)
+        self.epoch_end_manager.run_diagnostics(state)
 
     def finalize(self):
         for manager in (self.post_batch_manager, self.epoch_end_manager):
@@ -52,11 +48,11 @@ class DiagnosticsRunner:
         return self.checkpoint.is_best if self.checkpoint is not None else False
 
 
-def _build_schedule(resources, logging):
+def _build_schedule(method, logging):
     return LogSchedule(
-        total_batches=resources["total_batches"],
-        num_epochs=resources["num_epochs"],
-        num_steps=resources["num_steps"],
+        total_batches=len(method.train_loader),
+        num_epochs=method.epochs,
+        num_steps=method.num_steps,
         log_interval=logging.get("log_interval", "logarithmic"),
         save_init=logging.get("save_init", 5),
         save_freq=logging.get("save_freq", 4),
@@ -65,52 +61,22 @@ def _build_schedule(resources, logging):
 
 def create_diagnostics(method, *, project_root, **other_resources):
     """Build the per-phase diagnostics managers for ``method`` (a
-    ``SelectionMethod``). All static run resources are extracted from ``method``
-    here; ``project_root`` is the only one not derivable from the config.
-    ``other_resources`` lets subclasses inject extra static context. The
-    resources seed each manager's ``static_context`` and are used here to build
-    the schedules and log paths. Per-step values (model, device, …) arrive later
-    via shared_context.
+    ``SelectionMethod``). ``project_root`` is the only resource not derivable
+    from ``method``; all diagnostics access method state directly via
+    ``self.method``.
     """
     config = method.config
     diagnostics_config = config.get("diagnostics", {}) or {}
 
-    resources = {
-        'save_dir':           config['save_dir'],
-        'project_root':       project_root,
-        'dataset_name':       config['dataset']['name'],
-        'model_name':         config['networks']['params'].get('m_type', config['networks']['type']),
-        'seed':               config['seed'],
-        'fixed_train_loader': method.fixed_train_loader,
-        'test_loader':        method.test_loader,
-        'total_batches':      len(method.train_loader),
-        'num_train_samples':  method.num_train_samples,
-        'num_epochs':         method.epochs,
-        'num_steps':          method.num_steps,
-        'initial_best_acc':   method.best_acc,
-        'initial_best_epoch': method.best_epoch,
-        'noisy_indices':      method.data_info.get('noisy_indices'),
-        'true_labels':        method.data_info.get('true_labels'),
-        'wstar_test_acc':     method.data_info.get('wstar_test_acc'),
-        'what_test_acc':      method.data_info.get('what_test_acc'),
-        'bayes_accuracy':     config.get('bayes_accuracy'),
-        'num_classes':        method.num_classes,
-        'config':             config,
-        'logger':             method.logger,
-        **other_resources,
-    }
-
     defaults = diagnostics_config.get("logging_defaults", {})
     requested = diagnostics_config.get("diagnostics", {}) or {}
 
-    default_schedule = _build_schedule(resources, defaults)
-    logs_dir = os.path.join(resources["save_dir"], "logs")
+    default_schedule = _build_schedule(method, defaults)
+    logs_dir = os.path.join(config['save_dir'], "logs")
 
     builder = DiagnosticsBuilder()
-    post_batch_manager = DiagnosticsManager()
-    epoch_end_manager = DiagnosticsManager()
-    post_batch_manager.set_static_context(**resources)
-    epoch_end_manager.set_static_context(**resources)
+    post_batch_manager = DiagnosticsManager(method=method, project_root=project_root)
+    epoch_end_manager = DiagnosticsManager(method=method, project_root=project_root)
     checkpoint = None
     # Guard against two enabled loss/acc leaves resolving to the same W&B metric
     # name (their wandb.log calls would clobber each other at the same step).
@@ -120,7 +86,7 @@ def create_diagnostics(method, *, project_root, **other_resources):
         spec = spec or {}
         params = dict(spec.get("params", {}))
         params.setdefault("log_path", os.path.join(logs_dir, f"{name}.log"))
-        schedule = _build_schedule(resources, {**defaults, **spec["logging"]}) if spec.get("logging") else default_schedule
+        schedule = _build_schedule(method, {**defaults, **spec["logging"]}) if spec.get("logging") else default_schedule
 
         if name in POST_BATCH_DIAGNOSTICS:
             cls = POST_BATCH_DIAGNOSTICS[name]

@@ -1,4 +1,4 @@
-"""Diagnostic registry — maps config class names to constructors.
+"""Diagnostic registry. Maps config class names to constructors.
 
 Definitions live in standard.py (and model_metrics.py / ntk.py).
 """

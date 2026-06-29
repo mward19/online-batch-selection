@@ -267,7 +267,133 @@ run directory (optionally with `resume.additional_epochs`).
 
 ---
 
-## 10. Optional: TRAK for projection-NTK diagnostics
+## 10. Adding a new diagnostic
+
+### Concepts
+
+The diagnostics system is a **dependency DAG** of `Diagnostic` objects. Each
+diagnostic implements `_run()` and returns a `DiagnosticInfo`. Results are
+cached per `TrainState` (identified by `(total_steps, phase)`), so shared
+intermediate work — e.g. a forward pass — is computed once and reused by any
+number of leaf diagnostics that depend on it.
+
+There are two kinds of diagnostics:
+
+| Kind | Logged? | Registered with manager? | Phase |
+|------|---------|--------------------------|-------|
+| **Compute dependency** (e.g. `ForwardPass`) | No | No | — |
+| **Logged leaf** (e.g. `TrainLoss`) | Yes | Yes | `POST_BATCH` or `EPOCH_END` |
+
+Context available inside `_run()` via `self.get_context()`:
+
+| Key | Type | Notes |
+|-----|------|-------|
+| `model` | `nn.Module` | The current model (in eval or train mode) |
+| `device` | `torch.device` | |
+| `fixed_train_loader` | DataLoader | Fixed-order train loader for eval passes |
+| `test_loader` | DataLoader | Validation loader |
+| `num_train_samples` | int | |
+| `num_classes` | int | |
+| `noisy_indices` | array or None | Set on noisy datasets |
+| `true_labels` | Tensor or None | Clean labels on noisy datasets |
+| `selected_mask` | bool array | Set each epoch by the training loop (epoch-end only) |
+| `total_time` / `time_this_epoch` | float | Set by `after_epoch` (epoch-end only) |
+| `checkpoint_state` | dict or None | Full checkpoint dict; set by the training loop |
+| `save_dir` | str | Run output directory |
+
+`self.get_state()` returns the current `TrainState` with `.epoch`,
+`.batch_idx`, `.total_steps`, `.total_epochs`, `.total_batches`.
+
+### Step 1 — write the class
+
+Place it in `methods/diagnostics/standard.py` (or `model_metrics.py` for
+model-weight/gradient diagnostics).
+
+**Minimal logged leaf** (fires post-batch, reads from context):
+
+```python
+class MyMetric(Diagnostic):
+    def __init__(self, manager, builder, should_run=None, **params):
+        super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
+        # build any dependencies via builder.build(SomeDep, manager, ...)
+
+    def _run(self):
+        ctx = self.get_context()
+        value = float(ctx["some_key"])          # or run a dep: self.dep.run().info
+        return DiagnosticInfo("my_metric", {"my_metric": value})
+
+    def __eq__(self, other):
+        return isinstance(other, MyMetric)      # required for deduplication
+```
+
+Rules:
+- `__init__` signature must be `(self, manager, builder, should_run=None, **params)`.
+  `params` carries YAML `params:` keys plus `log_path` (injected automatically).
+- `_run` must return a `DiagnosticInfo(name, info)` where `info` is either a
+  scalar or a flat `dict` of scalars (both are logged to W&B by the default
+  `_log_payload`).
+- `__eq__` must be implemented if you intend to create multiple instances of the same diagnostics (with different parameters, for example). Two diagnostics that are equal share a single
+  instance (via `DiagnosticsBuilder`), so a dependency created by two different
+  leaves is computed only once.
+
+**Compute dependency** (not logged, built via `builder.build`):
+
+```python
+class MyExpensivePrep(Diagnostic):
+    def __init__(self, manager, some_arg):
+        super().__init__(manager)       # no log_path, no should_run
+        self.some_arg = some_arg
+
+    def _run(self):
+        result = ...                    # heavy computation
+        return DiagnosticInfo("my_prep", {"key": result})
+
+    def __eq__(self, other):
+        return isinstance(other, MyExpensivePrep) and self.some_arg == other.some_arg
+```
+
+Leaves acquire it with `self.example_dependency = builder.build(MyExpensivePrep, manager, some_arg)`
+and read it in `_run` with `self.example_dependency.run().info["key"]`.
+
+**Epoch-end diagnostic** — identical to a post-batch leaf but uses
+`should_run=(lambda state: True)` (applied automatically by the wiring; see Step
+2). Reads epoch-level context keys like `selected_mask`.
+
+### Step 2 — register it
+
+At the bottom of `methods/diagnostics/diagnostics.py`, add your class to the
+appropriate registry dict:
+
+```python
+POST_BATCH_DIAGNOSTICS = {
+    ...
+    "MyMetric": MyMetric,          # fires post-batch, on the schedule
+}
+EPOCH_END_DIAGNOSTICS = {
+    ...
+    "MyEpochMetric": MyEpochMetric,  # fires every epoch-end
+}
+```
+
+### Step 3 — enable it in a config
+
+```yaml
+diagnostics:
+  logging_defaults: { log_interval: logarithmic, save_init: 5, save_freq: 4 }
+  diagnostics:
+    MyMetric: {}                    # no params needed
+    MyMetric: { params: { log_path: logs/my_metric.log } }  # optional override
+    MyMetric:                       # custom logging schedule for this leaf only
+      logging: { log_interval: linear, save_freq: 1 }
+```
+
+Any key under `params:` is forwarded as a keyword argument to `__init__`. The
+`log_path` key is always injected automatically (defaults to
+`<save_dir>/logs/<DiagnosticName>.log`) and can be overridden here.
+
+---
+
+## 11. Optional: TRAK for projection-NTK diagnostics
 
 The projection NTK variants (`proj-pseudo`, `proj-trace`) need `TRAKer`:
 

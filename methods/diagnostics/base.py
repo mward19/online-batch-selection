@@ -1,11 +1,11 @@
 """Diagnostics framework.
 
-A ``Diagnostic`` computes one thing about the current training state. Diagnostics
-form a dependency DAG: a diagnostic's ``_run`` calls ``dep.run()`` on each of its
-dependencies, and ``run`` caches by ``TrainState`` so shared work (a forward
-pass, a kernel) is computed once per state and reused. A ``DiagnosticsManager``
+A `Diagnostic` computes one thing about the current training state. Diagnostics
+form a dependency DAG: a diagnostic's `_run` calls `dep.run()` on each of its
+dependencies, and `run` caches by `TrainState` so shared work (a forward
+pass, a kernel) is computed once per state and reused. A `DiagnosticsManager`
 holds the top-level (logged) diagnostics for one training phase and drives them;
-dependency-only diagnostics are built through ``DiagnosticsBuilder`` (for dedup)
+dependency-only diagnostics are built through `DiagnosticsBuilder` (for dedup)
 but never registered with a manager and never logged directly.
 """
 
@@ -25,9 +25,9 @@ class Phase(Enum):
 
 @dataclass(frozen=True)
 class TrainState:
-    """When/where we are. Equality (the diagnostic cache key) is ``(total_steps,
-    phase)`` only — model/optimizer state changes exactly once per optimizer
-    step, so equal ``total_steps`` ⇒ equal weights; ``phase`` separates points
+    """When/where we are. Equality (the diagnostic cache key) is `(total_steps,
+    phase)` only. Model/optimizer state changes exactly once per optimizer
+    step, so equal `total_steps` implies equal weights; `phase` separates points
     within a step. The remaining fields are kept for readable logs but excluded
     from equality."""
     total_steps: int
@@ -40,33 +40,31 @@ class TrainState:
 
 @dataclass
 class DiagnosticInfo:
-    """The output of a diagnostic. ``info`` is the value (scalar, dict, tensor,
-    …); ``metadata`` optionally hints at routing (units, scalar vs histogram)."""
+    """The output of a diagnostic. `info` is the value (scalar, dict, tensor,
+    …); `metadata` optionally hints at routing (units, scalar vs histogram)."""
     name: str
     info: Any
     metadata: Optional[dict] = None
 
 
 class Diagnostic:
-    """Base class. Subclasses implement ``_run`` (and ``__eq__`` if they may be
+    """Base class. Subclasses implement `_run` (and `__eq__` if they may be
     deduplicated). A diagnostic is *not* auto-registered with its manager;
-    ``create_diagnostics`` registers only the top-level (logged) ones, so
+    `create_diagnostics` registers only the top-level (logged) ones, so
     dependency-only diagnostics simply hold a manager ref for state/context."""
 
-    # read-only properties — diagnostics must not replace the method reference
+    # Read-only properties. Diagnostics must not modify the selection method.
+    # Technically it is still possible to modify self._method, but not
+    # self.method
     @property
     def method(self):
         return self._method
-
-    @property
-    def project_root(self):
-        return self._project_root
 
     def __init__(self, manager, log_path: Optional[str] = None,
                  should_run: Optional[Callable[[TrainState], bool]] = None):
         self.manager = manager
         self._method = manager.method
-        self._project_root = manager.project_root
+        self.project_root = manager.project_root
         self.log_path = log_path
         self.should_run = should_run if should_run is not None else (lambda state: True)
         self.last_run_state: Optional[TrainState] = None
@@ -74,9 +72,6 @@ class Diagnostic:
 
     def get_state(self) -> TrainState:
         return self.manager.current_state
-
-    def get_context(self) -> dict:
-        return self.manager.get_context()
 
     def _run(self) -> DiagnosticInfo:
         raise NotImplementedError
@@ -91,7 +86,7 @@ class Diagnostic:
         return self.last_run_diagnostic
 
     def conditional_run(self) -> bool:
-        """Run iff ``should_run`` accepts the current state. Returns whether it
+        """Run iff `should_run` accepts the current state. Returns whether it
         ran (so the manager only logs diagnostics that fired this state)."""
         if self.should_run(self.get_state()):
             self.run()
@@ -99,7 +94,7 @@ class Diagnostic:
         return False
 
     def _log_payload(self):
-        """Map ``(last_run_diagnostic, last_run_state)`` to a flat dict of
+        """Map `(last_run_diagnostic, last_run_state)` to a flat dict of
         scalars for logging. Override for non-scalar outputs."""
         info = self.last_run_diagnostic.info
         if isinstance(info, dict):
@@ -140,41 +135,18 @@ class DiagnosticsManager:
         self.should_run = should_run
         self.method = method
         self.project_root = project_root
-        # static_context: run resources, set once at build and never changed.
-        # shared_context: per-step values, updated each run_diagnostics. The two
-        # are kept separate by lifecycle; get_context() merges them.
-        self.static_context: dict = {}
-        self.shared_context: dict = {}
 
     def register(self, diagnostic: Diagnostic):
         self.diagnostics.append(diagnostic)
         return diagnostic
 
-    def set_static_context(self, **kwargs):
-        self.static_context = dict(kwargs)
-
-    def get_context(self) -> dict:
-        """Merge of static (set once) and shared (per-step) context. Raises if a
-        key appears in both - the two key sets must stay disjoint."""
-        overlap = self.static_context.keys() & self.shared_context.keys()
-        if overlap:
-            raise KeyError(
-                f"Diagnostics context key(s) {sorted(overlap)} present in both "
-                "static_context and shared_context; the two must be disjoint."
-            )
-        return {**self.static_context, **self.shared_context}
-
     def _update_state(self, state: TrainState):
         self.current_state = state
 
-    def _update_shared_context(self, **kwargs):
-        self.shared_context.update(kwargs)
-
-    def run_diagnostics(self, state: TrainState, **kwargs):
+    def run_diagnostics(self, state: TrainState):
         if not self.should_run:
             return
         self._update_state(state)
-        self._update_shared_context(**kwargs)
         for diagnostic in self.diagnostics:
             diagnostic.conditional_run()
         self._log_diagnostics()
@@ -188,7 +160,7 @@ class DiagnosticsManager:
 class DiagnosticsBuilder:
     """Builds diagnostics, returning a shared instance when an equal one already
     exists (so dependencies are computed once). Equality is via each
-    diagnostic's ``__eq__``."""
+    diagnostic's `__eq__`."""
 
     def __init__(self):
         self.all_diagnostics = defaultdict(list)
