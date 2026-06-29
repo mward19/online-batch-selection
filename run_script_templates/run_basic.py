@@ -1,6 +1,6 @@
 """Submit the basic single-dataset baseline runs.
 
-Each entry is a concrete merged config under ./configs/ run via
+Each entry is a concrete merged config under ./config_templates/ run via
 `main.py --config <config>` (the seed is a top-level key in the config). Run
 output dirs are claimed at runtime under ./experiments/; SLURM stdout/stderr
 go to logs/slurm/%j.{out,err}. Jobs request --requeue so preemption restarts land
@@ -16,11 +16,11 @@ USE_SLURM = True
 
 # (config, job-name tag, wall-time, memory). Synthetic/light jobs ask for less.
 RUNS = [
-    ("configs/makeblobs_basic.yaml",          "makeblobs", "1:00:00", "8GB"),
-    ("configs/teacher_generated_basic.yaml",  "teachergen", "2:00:00", "8GB"),
-    ("configs/mnist_basic.yaml",              "mnist",     "4:00:00", "16GB"),
-    ("configs/cifar3_basic.yaml",             "cifar3",    "8:00:00", "32GB"),
-    ("configs/cifar10_basic.yaml",            "cifar10",   "8:00:00", "32GB"),
+    ("config_templates/makeblobs_basic.yaml",          "makeblobs", "1:00:00", "8GB"),
+    ("config_templates/teacher_generated_basic.yaml",  "teachergen", "2:00:00", "8GB"),
+    ("config_templates/mnist_basic.yaml",              "mnist",     "4:00:00", "16GB"),
+    ("config_templates/cifar3_basic.yaml",             "cifar3",    "8:00:00", "32GB"),
+    ("config_templates/cifar10_basic.yaml",            "cifar10",   "8:00:00", "32GB"),
 ]
 
 Path("logs/slurm").mkdir(parents=True, exist_ok=True)

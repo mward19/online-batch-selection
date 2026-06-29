@@ -16,7 +16,7 @@ import subprocess
 
 # This script lives in a subdirectory but is invoked from the repo root
 # (`python run_script_templates/<this>.py`); put the repo root on sys.path so
-# repo-root modules import, and keep all relative paths (configs/, main.py)
+# repo-root modules import, and keep all relative paths (config_templates/, main.py)
 # resolving against the repo-root working directory.
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -24,7 +24,7 @@ from generate_configs import generate_configs
 
 USE_SLURM = True
 
-TEMPLATE = "configs/cifar3_deep_linear_template.yaml"
+TEMPLATE = "config_templates/cifar3_deep_linear_template.yaml"
 
 # Cartesian product over these fills the template's __REQUIRED__ leaves (incl. seed).
 PARAMS_TO_VARY = {

@@ -106,7 +106,7 @@ class NTKDiagnostics:
         )
         self.ntk_indices_path = os.path.join(
             self.project_root,
-            'ntk_indices',
+            'cache', 'ntk_indices',
             f'{self.dataset_name}.npy',
         )
         self.spectrum_path = None

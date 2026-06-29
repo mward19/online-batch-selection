@@ -33,7 +33,6 @@ wandb/
 # vscode
 .vscode/
 
-configs/makeblobs/generated/
 results/
 runs/
 selected_points/
@@ -44,11 +43,11 @@ spectral_decay/
 
 # AI
 CLAUDE.md
+plans/
 
 spectrum/
 spectral_decay/
 ternary/
-ntk_indices/
 exports/
 thesis_plots/
 run_teacher_generated.sh
@@ -61,3 +60,7 @@ plot_all.sh
 # WIP/local run scripts: keep the folder, ignore its contents.
 run_scripts/*
 !run_scripts/.gitkeep
+
+# WIP/local configs: keep the folder, ignore its contents.
+configs/*
+!configs/.gitkeep

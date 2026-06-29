@@ -27,7 +27,7 @@ repository root.
 `main.py` takes **one merged YAML config** via `--config`:
 
 ```bash
-python main.py --config configs/cifar3_rholoss.yaml
+python main.py --config config_templates/cifar3_rholoss.yaml
 ```
 
 Common flags:
@@ -53,7 +53,7 @@ To run interactively on a P100 node:
 ```bash
 salloc -C pascal --time=1:00:00 --ntasks=1 --nodes=1 --gpus=1 --mem=8000M
 mamba activate online-bs-p100
-python main.py --config configs/makeblobs_basic.yaml --wandb_not_upload
+python main.py --config config_templates/makeblobs_basic.yaml --wandb_not_upload
 ```
 
 ---
@@ -120,7 +120,7 @@ wandb:                       # passed to wandb.init(); --wandb_not_upload overri
   mode: online               # online | offline | disabled
 ```
 
-Ready-to-run example configs live in `configs/` (e.g. `cifar3_rholoss.yaml`,
+Ready-to-run example configs live in `config_templates/` (e.g. `cifar3_rholoss.yaml`,
 `makeblobs_basic.yaml`, `mnist_basic.yaml`, `cifar10_basic.yaml`,
 `teacher_generated_basic.yaml`).
 
@@ -157,7 +157,7 @@ Sweeps use a **template config** plus `generate_configs.py`. A template is a
 normal merged config with some leaves set to the sentinel `__REQUIRED__`:
 
 ```yaml
-# configs/cifar3_deep_linear_template.yaml (excerpt)
+# config_templates/cifar3_deep_linear_template.yaml (excerpt)
 seed: __REQUIRED__
 method: __REQUIRED__
 training_opt:
@@ -178,7 +178,7 @@ PARAMS_TO_VARY = {
     "method": ["RhoLoss"],
     "networks.params.num_hidden_layers": [3],
 }
-config_paths = generate_configs("configs/cifar3_deep_linear_template.yaml", PARAMS_TO_VARY)
+config_paths = generate_configs("config_templates/cifar3_deep_linear_template.yaml", PARAMS_TO_VARY)
 ```
 
 Rules: every key in `PARAMS_TO_VARY` must be `__REQUIRED__` in the template, and
@@ -247,7 +247,7 @@ run directory (optionally with `resume.additional_epochs`).
   `data/__init__.py` (CIFAR3/10/100, MNIST/FashionMNIST, TinyImageNet, MakeBlobs,
   Teacher_Generated, and `*_Noise` variants).
 - **`models/`** — model definitions (ResNet, LeNet, Linear, DeepLinear, TwoLayer).
-- **`configs/`** — ready-to-run merged configs and sweep templates.
+- **`config_templates/`** — tracked ready-to-run configs and sweep templates; **`configs/`** — local/WIP configs (contents git-ignored).
 - **`run_dir.py`** — run-name rendering, atomic run-dir creation, resume plumbing.
 - **`generate_configs.py`** — template → concrete configs for sweeps.
 - **`run_script_templates/`** — tracked example SLURM submission scripts;
