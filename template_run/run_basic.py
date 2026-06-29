@@ -29,6 +29,12 @@ Path("logs/slurm").mkdir(parents=True, exist_ok=True)
 
 run_type = RunType.SBATCH if USE_SLURM else RunType.NORMAL
 for config_path, tag, walltime, mem in RUNS:
-    run_job(config_path, run_type)
+    run_job(
+        config_path, 
+        run_type,
+        time=walltime,
+        mem=mem,
+        name=tag
+    )
 
 print("All jobs submitted." if USE_SLURM else "All jobs complete.")

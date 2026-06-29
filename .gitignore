@@ -11,21 +11,17 @@ _CIFAR/
 _MNIST/
 _TINYIMAGENET/
 logs/
+models/teacher/*.p
+models/teacher/*.pt
+models/teacher/*.pth
 
 # _TINYIMAGENET/
 _CIFAR_N/
 
-# bash scripts
-run.sh
-
-# exp
-exp/
-exp_before0804/
-
-# spring-cleaning output tree (§1)
+# outputs
 experiments/
 cache/
-configs-temp/
+.configs-temp/
 
 # wandb
 wandb/

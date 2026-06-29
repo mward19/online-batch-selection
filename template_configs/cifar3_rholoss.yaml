@@ -71,5 +71,5 @@ diagnostics:
     - SelectedPoints: {}
 
 wandb:
-  project: "Matthew—Deep Linear Networks"
+  project: "Template"
   mode: offline

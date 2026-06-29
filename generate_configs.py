@@ -4,7 +4,7 @@ A template is a single merged config with some leaf values set to the
 sentinel ``__REQUIRED__``, marking values that must be supplied at generation
 time. ``generate_configs`` fills those leaves over the Cartesian product of the
 supplied value lists, writing one merged config per combination to
-``./configs-temp/``. That directory is scratch/derived output and is exempt from
+``./.configs-temp/``. That directory is scratch/derived output and is exempt from
 the write-guard: existing files are overwritten (with a warning).
 """
 
@@ -15,7 +15,7 @@ import os
 import yaml
 
 REQUIRED = "__REQUIRED__"
-CONFIGS_TEMP_DIR = "configs-temp"
+CONFIGS_TEMP_DIR = ".configs-temp"
 
 
 def _iter_required_paths(node, prefix=""):

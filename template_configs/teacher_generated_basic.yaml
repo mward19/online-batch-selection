@@ -67,5 +67,5 @@ diagnostics:
     - Checkpoint: {}
 
 wandb:
-  project: "Basic Baselines"
+  project: "Template"
   mode: online

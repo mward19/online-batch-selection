@@ -21,6 +21,7 @@ def run_job(
         cpus: str = '4',
         mem: str = '32GB', # gb
         time: str = '1:00:00',
+        name: str = 'online-bs'
     ):
     python_cmd = ["python", "main.py", "--config", config_path]
     if run_type == RunType.NORMAL:
@@ -35,6 +36,7 @@ def run_job(
         f"--cpus-per-task={cpus}",
         f"--mem={mem}",
         f"--time={time}",
+        f"--job-name={name}",
     ]
 
     if run_type == RunType.SRUN:
