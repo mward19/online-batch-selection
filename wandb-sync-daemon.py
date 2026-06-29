@@ -51,7 +51,7 @@ def sync_daemon(save_dirs, interval_sec=30):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--save_dirs', type=str, default='./experiments/**')
+    parser.add_argument('save_dirs', type=str, nargs='?', default='./experiments/**')
     parser.add_argument('--interval', type=int, default=15)
     args = parser.parse_args()
     sync_daemon(args.save_dirs, args.interval)

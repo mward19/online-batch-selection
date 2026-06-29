@@ -4,9 +4,8 @@ A `Diagnostic` computes one thing about the current training state. Diagnostics
 form a dependency DAG: a diagnostic's `_run` calls `dep.run()` on each of its
 dependencies, and `run` caches by `TrainState` so shared work (a forward
 pass, a kernel) is computed once per state and reused. A `DiagnosticsManager`
-holds the top-level (logged) diagnostics for one training phase and drives them;
-dependency-only diagnostics are built through `DiagnosticsBuilder` (for dedup)
-but never registered with a manager and never logged directly.
+holds the top-level (logged) diagnostics for one training phase, drives them,
+and owns the deduplication table so shared dependency instances are built once.
 """
 
 from collections import defaultdict
@@ -28,6 +27,7 @@ class LogType(Enum):
     """How a diagnostic's payload is routed to W&B."""
     RUN = "run"        # wandb.log(payload, step=...)
     SUMMARY = "summary"  # wandb.run.summary.update(payload)
+    FILEONLY = "file only" # wandb does not log at all
 
 
 @dataclass(frozen=True)
@@ -114,8 +114,10 @@ class Diagnostic:
         payload = self._log_payload()
         if self.last_run_diagnostic.log_type == LogType.SUMMARY:
             wandb.run.summary.update(payload)
-        else:
+        elif self.last_run_diagnostic.log_type == LogType.RUN:
             wandb.log(payload, step=int(self.last_run_state.total_steps))
+        else:
+            pass # Do not log to W&B
 
     def file_log(self, infos: List[DiagnosticInfo]):
         if self.log_path is None:
@@ -131,14 +133,15 @@ class Diagnostic:
     def __eq__(self, other):
         raise NotImplementedError(
             f"{type(self).__name__} does not implement __eq__; override it if this "
-            "diagnostic may be deduplicated by DiagnosticsBuilder."
+            "diagnostic may be deduplicated by DiagnosticsManager.build."
         )
 
     __hash__ = None
 
 
 class DiagnosticsManager:
-    """Drives the top-level diagnostics for one training phase."""
+    """Drives the top-level diagnostics for one training phase and owns the
+    deduplication table so shared dependency instances are built once."""
 
     def __init__(self, method=None, project_root=None, should_run: bool = True):
         self.diagnostics: List[Diagnostic] = []
@@ -146,6 +149,19 @@ class DiagnosticsManager:
         self.should_run = should_run
         self.method = method
         self.project_root = project_root
+        self._all_diagnostics: dict = defaultdict(list)
+
+    def build(self, diagnostic_class, *args, **kwargs) -> "Diagnostic":
+        """Return a shared instance if an equal diagnostic already exists,
+        otherwise construct, cache, and return a new one."""
+        new_diagnostic = diagnostic_class(*args, **kwargs)
+        matches = [x for x in self._all_diagnostics[diagnostic_class] if x == new_diagnostic]
+        if len(matches) > 1:
+            raise ValueError(f"Multiple identical diagnostics of type {diagnostic_class.__name__}")
+        if matches:
+            return matches[0]
+        self._all_diagnostics[diagnostic_class].append(new_diagnostic)
+        return new_diagnostic
 
     def register(self, diagnostic: Diagnostic):
         self.diagnostics.append(diagnostic)
@@ -166,28 +182,3 @@ class DiagnosticsManager:
         for diagnostic in self.diagnostics:
             if diagnostic.last_run_state == self.current_state:
                 diagnostic.log()
-
-
-class DiagnosticsBuilder:
-    """Builds diagnostics, returning a shared instance when an equal one already
-    exists (so dependencies are computed once). Equality is via each
-    diagnostic's `__eq__`."""
-
-    def __init__(self):
-        self.all_diagnostics = defaultdict(list)
-
-    def fetch_duplicate_diagnostic(self, diagnostic) -> Optional[Diagnostic]:
-        matches = [x for x in self.all_diagnostics[type(diagnostic)] if x == diagnostic]
-        if not matches:
-            return None
-        if len(matches) > 1:
-            raise ValueError(f"Multiple identical diagnostics of type {type(diagnostic).__name__}")
-        return matches[0]
-
-    def build(self, diagnostic_class, *args, **kwargs) -> Diagnostic:
-        new_diagnostic = diagnostic_class(*args, **kwargs)
-        duplicate = self.fetch_duplicate_diagnostic(new_diagnostic)
-        if duplicate is not None:
-            return duplicate
-        self.all_diagnostics[diagnostic_class].append(new_diagnostic)
-        return new_diagnostic

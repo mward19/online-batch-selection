@@ -327,7 +327,7 @@ class ProbeDiagnostics:
 class ParamNorms(Diagnostic):
     """L2 norm of all trainable parameters."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
         self._impl = ParamGradDiagnostics(
             wandb_param_norms=True, wandb_grad_norms=False, logger=self.method.logger
@@ -343,7 +343,7 @@ class ParamNorms(Diagnostic):
 class GradNorms(Diagnostic):
     """L2 norm of the current minibatch gradients."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
         self._impl = ParamGradDiagnostics(
             wandb_param_norms=False, wandb_grad_norms=True, logger=self.method.logger
@@ -359,7 +359,7 @@ class GradNorms(Diagnostic):
 class WeightMatrixNorms(Diagnostic):
     """Frobenius / spectral / alignment norms of selected 2D weight matrices."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
         last_n = params.get("last_n_layers")
         self._impl = WeightMatrixDiagnostics(
@@ -379,7 +379,7 @@ class WeightMatrixNorms(Diagnostic):
 class LinearProbe(Diagnostic):
     """Train/test accuracy of a linear classifier fit on penultimate features."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
         self._impl = ProbeDiagnostics(
             logger=self.method.logger,

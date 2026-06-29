@@ -12,7 +12,7 @@ run_name_format:
   - lr: [$training_opt.optim_params.lr]
   - $training_opt.loss_type
 
-seed: 1
+seed: __REQUIRED__
 
 dataset:
   name: MakeBlobs
@@ -52,10 +52,12 @@ teacher_model_source: hyperplane_vector
 
 method: RhoLoss
 method_opt:
-  ratio: 1.0
+  ratio: 0.1
   balance: False
   ratio_scheduler: constant
   warmup_epochs: 0
+  scores_as_distribution: __REQUIRED__
+  softmax_lambda: 1.0
 
 diagnostics:
   logging_defaults:
@@ -78,7 +80,11 @@ diagnostics:
         statistic: median
     - MinibatchScores:
         statistic: std
+    - MinibatchScores:
+        statistic: min
+    - MinibatchScores:
+        statistic: max
 
 wandb:
-  project: "Matthew—Deep Linear Experiments (June 28)"
+  project: "Template"
   mode: online

@@ -30,7 +30,6 @@ wandb/
 .vscode/
 
 results/
-runs/
 selected_points/
 scripts/
 labels/
@@ -54,9 +53,9 @@ run_all.sh
 plot_all.sh
 
 # WIP/local run scripts: keep the folder, ignore its contents.
-run_scripts/*
-!run_scripts/.gitkeep
+run/*
+!run/.gitkeep
 
-# WIP/local configs: keep the folder, ignore its contents.
+# Local configs: keep the folder, ignore its contents.
 configs/*
 !configs/.gitkeep

@@ -5,7 +5,7 @@ drives at run-start/after-batch/after-epoch.
 
 import os
 
-from methods.diagnostics.base import DiagnosticsBuilder, DiagnosticsManager, Phase, TrainState
+from methods.diagnostics.base import DiagnosticsManager, Phase, TrainState
 from methods.diagnostics.standard import Checkpoint, _LossErrorLeaf
 from methods.diagnostics.diagnostics import EPOCH_END_DIAGNOSTICS, POST_BATCH_DIAGNOSTICS, TRAIN_END_DIAGNOSTICS
 from methods.diagnostics.schedule import LogSchedule
@@ -120,7 +120,6 @@ def create_diagnostics(method, *, project_root, **other_resources):
     default_schedule = _build_schedule(method, defaults)
     logs_dir = os.path.join(config['save_dir'], "logs")
 
-    builder = DiagnosticsBuilder()
     post_batch_manager = DiagnosticsManager(method=method, project_root=project_root)
     epoch_end_manager = DiagnosticsManager(method=method, project_root=project_root)
     train_end_manager = DiagnosticsManager(method=method, project_root=project_root)
@@ -134,17 +133,17 @@ def create_diagnostics(method, *, project_root, **other_resources):
 
         if cls_name in POST_BATCH_DIAGNOSTICS:
             cls = POST_BATCH_DIAGNOSTICS[cls_name]
-            diagnostic = cls(post_batch_manager, builder, should_run=default_schedule, **params)
+            diagnostic = cls(post_batch_manager, should_run=default_schedule, **params)
             post_batch_manager.register(diagnostic)
             if cls is Checkpoint:
                 checkpoint = diagnostic
         elif cls_name in EPOCH_END_DIAGNOSTICS:
             cls = EPOCH_END_DIAGNOSTICS[cls_name]
-            diagnostic = cls(epoch_end_manager, builder, should_run=(lambda state: True), **params)
+            diagnostic = cls(epoch_end_manager, should_run=(lambda state: True), **params)
             epoch_end_manager.register(diagnostic)
         elif cls_name in TRAIN_END_DIAGNOSTICS:
             cls = TRAIN_END_DIAGNOSTICS[cls_name]
-            diagnostic = cls(train_end_manager, builder, should_run=(lambda state: True), **params)
+            diagnostic = cls(train_end_manager, should_run=(lambda state: True), **params)
             train_end_manager.register(diagnostic)
         else:
             raise ValueError(f"Unknown diagnostic '{cls_name}' in config diagnostics.diagnostics.")

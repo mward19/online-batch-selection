@@ -198,6 +198,7 @@ def main():
             )
         wandb_kwargs['id'] = resume_state['wandb_run_id']
         wandb_kwargs['resume'] = 'must' if run_mode == 'extension' else 'allow'
+
     run = wandb.init(**wandb_kwargs)
     re_nest_configs(run.config)
     wandb.define_metric('acc', 'max')

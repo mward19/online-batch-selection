@@ -853,7 +853,7 @@ class NTK(Diagnostic):
     manager's static context at construction; reads ``model``/``device`` from the
     merged context at run time."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
         self._impl = NTKDiagnostics(
             logger=self.method.logger,

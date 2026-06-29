@@ -55,6 +55,10 @@ def download_dataset(config_path):
     except (KeyError, TypeError):
         print("No dataset name/root in config. Not downloading dataset.")
         return
+    
+    if os.path.exists(root):
+        print(f"Directory {root} already exists, not downloading dataset {name}.")
+        return
 
     if name in _SYNTHETIC_DATASETS:
         print(f"Dataset {name} is generated in-process. Nothing to download.")

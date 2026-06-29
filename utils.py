@@ -6,13 +6,15 @@ import secrets
 import os
 import csv
 import yaml
+from tqdm import tqdm
 
 from enum import Enum
 
 class RunType(Enum):
-    NORMAL = 0
-    SBATCH = 1
-    SRUN = 2
+    DRY = 0 # Does not run at all
+    NORMAL = 1
+    SBATCH = 2
+    SRUN = 3
 
 def run_job(
         config_path, 
@@ -21,9 +23,14 @@ def run_job(
         cpus: str = '4',
         mem: str = '32GB', # gb
         time: str = '1:00:00',
-        name: str = 'online-bs'
+        name: str = 'online-bs',
+        preemptible=True
     ):
     python_cmd = ["python", "main.py", "--config", config_path]
+
+    if run_type == RunType.DRY:
+        tqdm.write(f'Dry run. Would have run `{python_cmd}`')
+
     if run_type == RunType.NORMAL:
         subprocess.run(python_cmd, check=True)
         return
@@ -47,6 +54,13 @@ def run_job(
         "--output=logs/slurm/%j.out",
         "--error=logs/slurm/%j.err",
     ]
+
+    if preemptible:
+        slurm_flags += [
+            "--requeue",
+            "--qos=standby"
+        ]
+
 
     if run_type == RunType.SBATCH:
         subprocess.run(

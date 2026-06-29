@@ -6,7 +6,7 @@ import torch
 # Determining inputs for a noise-label cache file. The filename losslessly
 # encodes each of these, so different inputs map to different files and a
 # mismatched noise realization can never be silently reused.
-LABEL_CACHE_KEYS = ('dataset', 'noise_percent', 'noise_seed', 'noise_algo')
+LABEL_CACHE_KEYS = ('dataset', 'noise_proportion', 'noise_seed', 'noise_algo')
 
 # Version tag for the derangement algorithm below. Bump whenever the noise
 # generation logic changes, so stale caches get a new name instead of being
@@ -16,17 +16,17 @@ NOISE_ALGO_VERSION = 1
 CACHE_LABELS_DIR = os.path.join('cache', 'labels')
 
 
-def noise_cache_filename(dataset_name, noise_percent, noise_seed, noise_algo=NOISE_ALGO_VERSION):
+def noise_cache_filename(dataset_name, noise_proportion, noise_seed, noise_algo=NOISE_ALGO_VERSION):
 	return (
-		f'{dataset_name.lower()}_noise{noise_percent}'
+		f'{dataset_name.lower()}_noise{noise_proportion}'
 		f'_nseed{int(noise_seed)}_algo{int(noise_algo)}_labels.pt'
 	)
 
 
-def noise_cache_path(dataset_name, noise_percent, noise_seed, noise_algo=NOISE_ALGO_VERSION):
+def noise_cache_path(dataset_name, noise_proportion, noise_seed, noise_algo=NOISE_ALGO_VERSION):
 	return os.path.join(
 		CACHE_LABELS_DIR,
-		noise_cache_filename(dataset_name, noise_percent, noise_seed, noise_algo),
+		noise_cache_filename(dataset_name, noise_proportion, noise_seed, noise_algo),
 	)
 
 
@@ -225,9 +225,9 @@ def set_dataset_targets(dataset, labels):
 
 def apply_or_generate_label_noise(dataset, num_classes, dataset_config, logger, dataset_name,
 								  seed=None, run_dir=None):
-	noise_fraction = float(dataset_config.get('noise_percent', 0.0))
+	noise_fraction = float(dataset_config.get('noise_proportion', 0.0))
 	if not 0.0 <= noise_fraction <= 1.0:
-		raise ValueError(f'dataset.noise_percent must be in [0, 1], got {noise_fraction}')
+		raise ValueError(f'dataset.noise_proportion must be in [0, 1], got {noise_fraction}')
 
 	rng_seed = int(dataset_config.get('noise_seed', seed if seed is not None else 0))
 	labels_path = noise_cache_path(dataset_name, noise_fraction, rng_seed)

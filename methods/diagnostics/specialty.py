@@ -12,7 +12,7 @@ class WStarTestAcc(Diagnostic):
     reference line. Value is constant; logging each step keeps it visible
     alongside training curves in W&B. No-ops if the dataset doesn't provide it."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
 
     def _run(self):
@@ -29,7 +29,7 @@ class WHatTestAcc(Diagnostic):
     """Logs the test accuracy of the noised teacher classifier (w_hat) as a
     reference line. No-ops if the dataset doesn't provide it."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
 
     def _run(self):
@@ -46,7 +46,7 @@ class BayesAccAntipodalGaussian(Diagnostic):
     """Analytical Bayes accuracy for antipodal_unit_sphere blobs: Φ(center_scale / cluster_std).
     No-ops on other center types."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
 
     def _run(self):

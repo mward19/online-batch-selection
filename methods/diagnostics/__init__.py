@@ -3,8 +3,7 @@ from methods.diagnostics.base import (
     TrainState,
     DiagnosticInfo,
     Diagnostic,
-    DiagnosticsManager,
-    DiagnosticsBuilder,
+    DiagnosticsManager
 )
 
 __all__ = [
@@ -13,5 +12,4 @@ __all__ = [
     "DiagnosticInfo",
     "Diagnostic",
     "DiagnosticsManager",
-    "DiagnosticsBuilder",
 ]

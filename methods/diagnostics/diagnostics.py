@@ -3,15 +3,10 @@
 Definitions live in standard.py (and model_metrics.py / ntk.py).
 """
 
-from methods.diagnostics.standard import (
-    TrainLoss, TrainAcc, ValLoss, ValAcc,
-    TrueLabelTrainLoss, TrueLabelTrainAcc,
-    LogitNormL2, Progress, Checkpoint, SelectedPoints, Timing,
-    MinibatchScores,
-)
-from methods.diagnostics.model_metrics import GradNorms, LinearProbe, ParamNorms, WeightMatrixNorms
-from methods.diagnostics.ntk import NTK
-from methods.diagnostics.specialty import WStarTestAcc, WHatTestAcc, BayesAccAntipodalGaussian
+from methods.diagnostics.standard import *
+from methods.diagnostics.model_metrics import *
+from methods.diagnostics.ntk import *
+from methods.diagnostics.specialty import *
 
 POST_BATCH_DIAGNOSTICS = {
     "TrainLoss": TrainLoss,
@@ -32,6 +27,7 @@ POST_BATCH_DIAGNOSTICS = {
 }
 EPOCH_END_DIAGNOSTICS = {
     "SelectedPoints": SelectedPoints,
+    "SelectedPointsSummary": SelectedPointsSummary,
     "Timing": Timing,
 }
 TRAIN_END_DIAGNOSTICS = {

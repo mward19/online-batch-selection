@@ -16,12 +16,12 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-from methods.diagnostics.base import Diagnostic, DiagnosticInfo
+from methods.diagnostics.base import Diagnostic, DiagnosticInfo, LogType
 from run_dir import atomic_save
 
 
 # --------------------------------------------------------------------------- #
-# Layer 1: cached compute dependencies (built via the builder, not registered)
+# Layer 1: cached compute dependencies (built via manager.build, never registered)
 # --------------------------------------------------------------------------- #
 
 class ForwardPass(Diagnostic):
@@ -66,11 +66,11 @@ class PerSampleLossError(Diagnostic):
     """Per-sample loss and 0/1 error for ``loader_key`` against ``label_source``
     ('loader' = the loader's own (possibly noisy) labels, 'true' = clean labels)."""
 
-    def __init__(self, manager, builder, loader_key, label_source):
+    def __init__(self, manager, loader_key, label_source):
         super().__init__(manager)
         self.loader_key = loader_key
         self.label_source = label_source
-        self.forward_pass = builder.build(ForwardPass, manager, loader_key)
+        self.forward_pass = manager.build(ForwardPass, manager, loader_key)
 
     def _run(self):
         fp = self.forward_pass.run().info
@@ -108,7 +108,7 @@ class _LossErrorLeaf(Diagnostic):
 
     _REQUIRED = ("loader_key", "label_source", "metric", "log_key")
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         # Config may override the displayed metric name.
         if params.get("log_key") is not None:
             self.log_key = params["log_key"]
@@ -119,7 +119,7 @@ class _LossErrorLeaf(Diagnostic):
                     f"(it is still None on the abstract _LossErrorLeaf base)."
                 )
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
-        self.dep = builder.build(PerSampleLossError, manager, builder,
+        self.dep = manager.build(PerSampleLossError, manager,
                                  self.loader_key, self.label_source)
 
     def _run(self):
@@ -153,10 +153,10 @@ class TrueLabelTrainAcc(_LossErrorLeaf):
 class LogitNormL2(Diagnostic):
     """Mean L2 norm of train/val logits."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
-        self.train_fp = builder.build(ForwardPass, manager, "train")
-        self.val_fp = builder.build(ForwardPass, manager, "val")
+        self.train_fp = manager.build(ForwardPass, manager, "train")
+        self.val_fp = manager.build(ForwardPass, manager, "val")
 
     def _run(self):
         train = float(self.train_fp.run().info["logit_l2"].mean().item())
@@ -176,10 +176,10 @@ class Progress(Diagnostic):
     old ``SnapshotManager._compute_progress``; depends on the shared forward
     passes."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
-        self.train_fp = builder.build(ForwardPass, manager, "train")
-        self.val_fp = builder.build(ForwardPass, manager, "val")
+        self.train_fp = manager.build(ForwardPass, manager, "train")
+        self.val_fp = manager.build(ForwardPass, manager, "val")
 
     def _run(self):
         train_fp = self.train_fp.run().info
@@ -197,9 +197,9 @@ class Checkpoint(Diagnostic):
     ``snapshots/checkpoint.pth.tar`` atomically every time it fires and copies
     ``model_best.pth.tar`` when val accuracy improves."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, should_run=should_run)
-        self.val_acc = builder.build(PerSampleLossError, manager, builder, "val", "loader")
+        self.val_acc = manager.build(PerSampleLossError, manager, "val", "loader")
         self.snapshots_dir = os.path.join(self.method.config["save_dir"], "snapshots")
         self.checkpoint_path = os.path.join(self.snapshots_dir, "checkpoint.pth.tar")
         self.best_path = os.path.join(self.snapshots_dir, "model_best.pth.tar")
@@ -230,32 +230,54 @@ class Checkpoint(Diagnostic):
     def __eq__(self, other):
         return isinstance(other, Checkpoint)
 
-
 class SelectedPoints(Diagnostic):
+    def __init__(self, manager, should_run=None, **params):
+        super().__init__(manager, should_run=should_run)
+        self.noisy_indices = _to_numpy_indices(self.method.data_info.get("noisy_indices"))
+        self.num_train_samples = int(self.method.num_train_samples)
+        self._masks = []
+
+    def _run(self):
+        mask = self.method._epoch_selected_mask
+        if mask is not None:
+            m = mask.cpu().numpy().astype(bool) if isinstance(mask, torch.Tensor) else np.asarray(mask, dtype=bool)
+            self._masks.append(m)
+        return DiagnosticInfo("selected_points_mask", mask, LogType.FILEONLY)
+
+    def finalize(self):
+        if not self._masks:
+            return
+        arr = np.stack(self._masks, axis=0)  # (num_epochs, num_train_samples)
+        np.save(os.path.join(self.method.config["save_dir"], "selected_points.npy"), arr)
+
+    def __eq__(self, other):
+        return isinstance(other, SelectedPoints)
+
+
+class SelectedPointsSummary(Diagnostic):
     """Epoch-end noisy-selection statistics. Reads the epoch's selected-point
     mask from ``method._epoch_selected_mask`` and the noisy indices / train size
     from ``method``."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, should_run=should_run)
         self.noisy_indices = _to_numpy_indices(self.method.data_info.get("noisy_indices"))
         self.num_train_samples = int(self.method.num_train_samples)
+        self.selected_points = manager.build(SelectedPoints, manager)
 
     def _run(self):
-        mask = self.method._epoch_selected_mask
-        if self.noisy_indices is None or self.noisy_indices.size == 0:
-            return DiagnosticInfo("selected_points", {})
+        mask = self.selected_points.run().info
         num_noisy_selected = int(mask[self.noisy_indices].sum())
         total_noisy = int(self.noisy_indices.size)
-        return DiagnosticInfo("selected_points", {
+        return DiagnosticInfo("selected_points_statistics", {
             "num noisy points selected": num_noisy_selected,
             "percent of batch with label noise": num_noisy_selected / self.num_train_samples,
             "percent of points with label noise selected":
-                (num_noisy_selected / total_noisy) if total_noisy > 0 else 0.0,
+                (num_noisy_selected / total_noisy) if total_noisy > 0 else 0.0
         })
 
     def __eq__(self, other):
-        return isinstance(other, SelectedPoints)
+        return isinstance(other, SelectedPointsSummary)
 
 
 class Timing(Diagnostic):
@@ -263,7 +285,7 @@ class Timing(Diagnostic):
     spent in the most recent epoch, read from the manager's shared context
     (populated by ``SelectionMethod.after_epoch``)."""
 
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
 
     def _run(self):
@@ -286,7 +308,7 @@ _SCORE_STATS = {
 
 
 class MinibatchScores(Diagnostic):
-    def __init__(self, manager, builder, should_run=None, **params):
+    def __init__(self, manager, should_run=None, **params):
         statistic = params.get("statistic")
         if statistic not in _SCORE_STATS:
             raise ValueError(

@@ -13,7 +13,7 @@ seed: __REQUIRED__
 
 dataset:
   name: MNIST_Noise
-  noise_percent: __REQUIRED__
+  noise_proportion: 0.1
   root: ./_MNIST
   num_classes: 10
   im_size: [32, 32]
@@ -32,7 +32,7 @@ training_opt:
   test_batch_size: 512
   optimizer: SGD
   optim_params:
-    lr: __REQUIRED__
+    lr: 0.01
     weight_decay: 0.0
   scheduler_params: {}
   scheduler: 'constant'
@@ -57,13 +57,14 @@ diagnostics:
     save_init: 5
     save_freq: 4
   diagnostics:
-    - TrainLoss: {}
-    - TrainAcc: {}
-    - ValLoss: {}
-    - ValAcc: {}
-    - Progress: {}
-    - Timing: {}
-    - Checkpoint: {}
+    - TrainLoss
+    - TrainAcc
+    - ValLoss
+    - ValAcc
+    - Progress
+    - Timing
+    - Checkpoint
+    - SelectedPoints # Only logged to file, not to W&B
 
 wandb:
   project: "Template"

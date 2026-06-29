@@ -219,8 +219,7 @@ class SelectionMethod(object):
             return
         idx = indexes.detach().cpu().numpy() if isinstance(indexes, torch.Tensor) else np.asarray(indexes)
         idx = idx.reshape(-1).astype(np.int64)
-        valid = (idx >= 0) & (idx < self.num_train_samples)
-        self._epoch_selected_mask[idx[valid]] = 1
+        self._epoch_selected_mask[idx] = 1
 
     def after_batch(self, i, inputs, targets, indexes, outputs, epoch):
         self.total_step += 1
