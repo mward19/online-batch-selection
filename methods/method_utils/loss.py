@@ -33,6 +33,30 @@ def create_criterion(config, logger):
     loss_params = config['training_opt']['loss_params']
     if loss_type == 'CrossEntropy':
         criterion = nn.CrossEntropyLoss(reduction='none', **loss_params)
+    elif loss_type == "FocalLoss":
+        if 'gamma' not in loss_params:
+            raise ValueError(f"FocalLoss requires a 'gamma' parameter in loss_params, but got {loss_params}")
+        def focal_loss(logits, targets, gamma=loss_params['gamma']):
+            log_probs = F.log_softmax(logits, dim=-1)
+
+            log_pt = log_probs.gather(1, targets.unsqueeze(1)).squeeze(1)
+            pt = log_pt.exp()
+
+            loss = -((1 - pt) ** gamma) * log_pt
+
+            return loss
+        criterion = focal_loss
+    elif loss_type == "Squentropy":
+        def squentropy_loss(logits, targets):
+            probs = F.softmax(logits, dim=-1)  # [B, C]
+
+            targets_one_hot = F.one_hot(targets, num_classes=logits.size(-1)).float()
+
+            loss = (probs - targets_one_hot) ** 2
+            loss = loss.sum(dim=-1)  # per-sample scalar [B]
+
+            return loss
+        criterion = squentropy_loss
     else:
         raise NotImplementedError
     
