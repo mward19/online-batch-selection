@@ -140,7 +140,7 @@ class RhoLoss(SelectionMethod):
         
         # Return to train mode and return selected indices
         self.model.train()
-        return index_selected.cpu().numpy()
+        return index_selected.cpu().numpy(), reducible_loss.detach().cpu()
 
     def before_batch(self, i, inputs, targets, indexes, epoch):
         """Prepare the batch for training by selecting samples based on reducible loss.
@@ -166,8 +166,8 @@ class RhoLoss(SelectionMethod):
 
         # Get indices based on reducible loss
         number_to_select = max(1, int(inputs.shape[0] * ratio))
-        indices = self.reducible_loss_selection(inputs, targets, indexes, number_to_select, epoch)
+        indices, scores = self.reducible_loss_selection(inputs, targets, indexes, number_to_select, epoch)
         inputs = inputs[indices]
         targets = targets[indices]
         indexes = indexes[indices]
-        return MinibatchInfo(inputs, targets, indexes)
+        return MinibatchInfo(inputs, targets, indexes, scores=scores)

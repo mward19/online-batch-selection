@@ -855,15 +855,14 @@ class NTK(Diagnostic):
 
     def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
-        sc = manager.static_context
         self._impl = NTKDiagnostics(
-            logger=sc["logger"],
-            fixed_train_loader=sc["fixed_train_loader"],
-            project_root=sc["project_root"],
-            dataset_name=sc["dataset_name"],
-            seed=sc["seed"],
-            config=sc["config"],
-            num_classes=sc["num_classes"],
+            logger=self.method.logger,
+            fixed_train_loader=self.method.fixed_train_loader,
+            project_root=self.project_root,
+            dataset_name=self.method.config['dataset']['name'],
+            seed=self.method.config['seed'],
+            config=self.method.config,
+            num_classes=self.method.num_classes,
             ntk_max_samples=int(params.get("max_samples", 1000)),
             ntk_top_k=int(params.get("top_k", 10)),
             ntk_variant=str(params.get("variant", params.get("kernel_type", "trace"))),
@@ -875,9 +874,9 @@ class NTK(Diagnostic):
         )
 
     def _run(self):
-        ctx = self.get_context()
         total_steps = int(self.get_state().total_steps)
-        return DiagnosticInfo("ntk", self._impl.log_metrics(ctx["model"], ctx["device"], total_steps))
+        model = self.method.model
+        return DiagnosticInfo("ntk", self._impl.log_metrics(model, next(model.parameters()).device, total_steps))
 
     def finalize(self):
         self._impl.finalize()

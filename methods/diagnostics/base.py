@@ -53,9 +53,20 @@ class Diagnostic:
     ``create_diagnostics`` registers only the top-level (logged) ones, so
     dependency-only diagnostics simply hold a manager ref for state/context."""
 
+    # read-only properties — diagnostics must not replace the method reference
+    @property
+    def method(self):
+        return self._method
+
+    @property
+    def project_root(self):
+        return self._project_root
+
     def __init__(self, manager, log_path: Optional[str] = None,
                  should_run: Optional[Callable[[TrainState], bool]] = None):
         self.manager = manager
+        self._method = manager.method
+        self._project_root = manager.project_root
         self.log_path = log_path
         self.should_run = should_run if should_run is not None else (lambda state: True)
         self.last_run_state: Optional[TrainState] = None
@@ -123,10 +134,12 @@ class Diagnostic:
 class DiagnosticsManager:
     """Drives the top-level diagnostics for one training phase."""
 
-    def __init__(self, should_run: bool = True):
+    def __init__(self, method=None, project_root=None, should_run: bool = True):
         self.diagnostics: List[Diagnostic] = []
         self.current_state: Optional[TrainState] = None
         self.should_run = should_run
+        self.method = method
+        self.project_root = project_root
         # static_context: run resources, set once at build and never changed.
         # shared_context: per-step values, updated each run_diagnostics. The two
         # are kept separate by lifecycle; get_context() merges them.
@@ -142,7 +155,7 @@ class DiagnosticsManager:
 
     def get_context(self) -> dict:
         """Merge of static (set once) and shared (per-step) context. Raises if a
-        key appears in both — the two key sets must stay disjoint."""
+        key appears in both - the two key sets must stay disjoint."""
         overlap = self.static_context.keys() & self.shared_context.keys()
         if overlap:
             raise KeyError(

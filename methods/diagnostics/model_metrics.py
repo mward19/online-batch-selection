@@ -330,11 +330,11 @@ class ParamNorms(Diagnostic):
     def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
         self._impl = ParamGradDiagnostics(
-            wandb_param_norms=True, wandb_grad_norms=False, logger=manager.static_context["logger"]
+            wandb_param_norms=True, wandb_grad_norms=False, logger=self.method.logger
         )
 
     def _run(self):
-        return DiagnosticInfo("param_norms", self._impl.log_metrics(self.get_context()["model"]))
+        return DiagnosticInfo("param_norms", self._impl.log_metrics(self.method.model))
 
     def __eq__(self, other):
         return isinstance(other, ParamNorms)
@@ -346,11 +346,11 @@ class GradNorms(Diagnostic):
     def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
         self._impl = ParamGradDiagnostics(
-            wandb_param_norms=False, wandb_grad_norms=True, logger=manager.static_context["logger"]
+            wandb_param_norms=False, wandb_grad_norms=True, logger=self.method.logger
         )
 
     def _run(self):
-        return DiagnosticInfo("grad_norms", self._impl.log_metrics(self.get_context()["model"]))
+        return DiagnosticInfo("grad_norms", self._impl.log_metrics(self.method.model))
 
     def __eq__(self, other):
         return isinstance(other, GradNorms)
@@ -363,14 +363,14 @@ class WeightMatrixNorms(Diagnostic):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
         last_n = params.get("last_n_layers")
         self._impl = WeightMatrixDiagnostics(
-            logger=manager.static_context["logger"],
+            logger=self.method.logger,
             enabled=True,
             param_names=params.get("param_names"),
             last_n_layers=int(last_n) if last_n is not None else None,
         )
 
     def _run(self):
-        return DiagnosticInfo("weight_matrix_norms", self._impl.log_metrics(self.get_context()["model"]))
+        return DiagnosticInfo("weight_matrix_norms", self._impl.log_metrics(self.method.model))
 
     def __eq__(self, other):
         return isinstance(other, WeightMatrixNorms)
@@ -381,19 +381,18 @@ class LinearProbe(Diagnostic):
 
     def __init__(self, manager, builder, should_run=None, **params):
         super().__init__(manager, log_path=params.get("log_path"), should_run=should_run)
-        sc = manager.static_context
         self._impl = ProbeDiagnostics(
-            logger=sc["logger"],
-            train_loader=sc["fixed_train_loader"],
-            test_loader=sc["test_loader"],
+            logger=self.method.logger,
+            train_loader=self.method.fixed_train_loader,
+            test_loader=self.method.test_loader,
             lr_max_iter=int(params.get("max_iter", 300)),
             lr_max_samples=int(params.get("max_samples", -1)),
             enabled=True,
         )
 
     def _run(self):
-        ctx = self.get_context()
-        return DiagnosticInfo("linear_probe", self._impl.log_metrics(ctx["model"], ctx["device"]))
+        model = self.method.model
+        return DiagnosticInfo("linear_probe", self._impl.log_metrics(model, next(model.parameters()).device))
 
     def __eq__(self, other):
         return isinstance(other, LinearProbe)

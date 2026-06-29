@@ -19,6 +19,7 @@ class MinibatchInfo:
     targets: torch.Tensor
     indices: torch.Tensor
     weights: torch.Tensor | None = None  # optional. For weighted loss
+    scores: torch.Tensor | None = None   # per-sample selection scores (full metabatch)
 
 class SelectionMethod(object):
     method_name = 'SelectionMethod'
@@ -190,6 +191,8 @@ class SelectionMethod(object):
         self.total_time = float(getattr(self, 'total_time', 0.0))
         self.time_this_epoch = float(getattr(self, 'time_this_epoch', 0.0))
         self.total_step = int(getattr(self, 'total_step', 0))
+        self._last_minibatch_scores = None
+        self._current_checkpoint_state = None
 
     def before_epoch(self, epoch):
         # reset the per-epoch selected-point mask, then select samples
@@ -201,9 +204,6 @@ class SelectionMethod(object):
             total_steps=self.total_step,
             epoch=epoch,
             total_epochs=self.epochs,
-            selected_mask=self._epoch_selected_mask,
-            total_time=self.total_time,
-            time_this_epoch=self.time_this_epoch,
         )
         return
 
@@ -245,19 +245,13 @@ class SelectionMethod(object):
         }
 
     def _run_post_batch_diagnostics(self, epoch, batch_idx):
-        model = self.model.module if hasattr(self.model, 'module') else self.model
-        device = next(model.parameters()).device
-
+        self._current_checkpoint_state = self._build_checkpoint_state(epoch)
         self.diagnostics.run_post_batch(
             total_steps=self.total_step,
             epoch=epoch,
             batch_idx=batch_idx,
             total_epochs=self.epochs,
             total_batches=len(self.train_loader),
-            model=model,
-            device=device,
-            lr=self.optimizer.param_groups[0]['lr'],
-            checkpoint_state=self._build_checkpoint_state(epoch),
         )
         self.best_acc = self.diagnostics.best_acc
         self.best_epoch = self.diagnostics.best_epoch
@@ -277,6 +271,7 @@ class SelectionMethod(object):
             minibatch = self.before_batch(
                 i, metabatch_inputs, metabatch_targets, metabatch_indexes, epoch
             )
+            self._last_minibatch_scores = minibatch.scores
             selected_outputs, features = (
                 self.model(
                     x=minibatch.inputs,
