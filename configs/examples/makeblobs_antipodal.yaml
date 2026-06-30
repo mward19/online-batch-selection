@@ -7,7 +7,6 @@ run_name_format:
   - example
   - $dataset.name
   - $method
-  - $dataset.noise_proportion
 
 seed: 1
 
@@ -29,9 +28,9 @@ dataset:
 networks:
   type: DeepLinear
   params:
-    m_type: linear
+    m_type: deep_linear
     num_hidden_layers: 3
-    hidden_dim: 32
+    hidden_dim: 1000
 
 training_opt:
   num_epochs: 200

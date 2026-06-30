@@ -50,12 +50,12 @@ diagnostics:
     save_init: 5
     save_freq: 4
   diagnostics:
-    - TrainLoss: {}
-    - TrainAcc: {}
-    - ValLoss: {}
-    - ValAcc: {}
-    - Timing: {}
-    - Checkpoint: {}
+    - TrainLoss
+    - TrainAcc
+    - ValLoss
+    - ValAcc
+    - Timing
+    - Checkpoint
 
 wandb:
   project: "Example" 
