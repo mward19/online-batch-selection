@@ -27,7 +27,7 @@ def run_job(
             tqdm.write(f'Dry run. Would have run `{download_cmd}`')    
         else:
             # Perform necessary downloads
-        subprocess.run(download_cmd, check=True)
+            subprocess.run(download_cmd, check=True)
 
     python_cmd = ["python", "main.py", "--config", config_path]
 
