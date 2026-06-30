@@ -1,4 +1,4 @@
-# Config template to be used with `generate_configs.py`. Trains a Linear model
+# Config template to be used with `generate_configs.py`. Trains a ResNet model
 # on CIFAR3 (dog, cat, bird) using a ResNet model using Uniform batch selection.
 # Searches over learning rates.
 
