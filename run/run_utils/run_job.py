@@ -22,7 +22,7 @@ def run_job(
         download=True
     ):
     if download:
-    download_cmd = ["python", "perform_downloads.py", "--method", config_path]
+        download_cmd = ["python", "perform_downloads.py", "--method", config_path]
         if run_type == RunType.DRY:
             tqdm.write(f'Dry run. Would have run `{download_cmd}`')    
         else:
